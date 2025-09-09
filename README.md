@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -34,7 +35,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl font-semibold text-white">Boletim de Ocorrências</h2>
+                        <h2 class="text-xl font-semibold text-white">Boletim de Ocorrências (BETA)</h2>
                         <p class="text-gray-400 text-sm group-hover:text-cyan-300">Acessar o portal de boletins.</p>
                     </div>
                 </div>
@@ -57,7 +58,7 @@
         </div>
 
         <footer class="text-center text-gray-500 text-xs pt-4">
-            <p>&copy; 2024 - Todos os direitos reservados.</p>
+            <p>&copy; 2025 - Todos os direitos reservados.</p>
             <p class="mt-2">Desenvolvido por Sales</p>
         </footer>
     </div>
@@ -65,3 +66,4 @@
 </body>
 
 </html>
+
