@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
@@ -6,6 +5,7 @@
     <title>Formulário de Boletim de Ocorrência</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- TODOS OS SCRIPTS E ESTILOS ORIGINAIS DA JOTFORM RESTAURADOS -->
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/prototype.forms.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/jotform.forms.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/maskedinput_5.0.9.min.js" type="text/javascript"></script>
@@ -25,25 +25,45 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        /* Aplica a fonte e cor de fundo do layout de permutas */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #483D8B;
         }
-
-        /* Sobrescreve o fundo do formulário Jotform para que ele fique branco dentro do nosso contêiner */
         .jotform-form {
             background-color: white !important;
         }
-
-        /* Oculta o rodapé da Jotform */
         [class*="branding-footer"] {
             display: none !important;
+        }
+        .form-textarea{
+            resize: vertical;
         }
     </style>
 
 </head>
 <body class="p-4 sm:p-6 md:p-8">
+    
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+      <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Confirmar Limpeza</h3>
+          <div class="mt-2 px-7 py-3">
+            <p class="text-sm text-gray-500">
+              Tem certeza que deseja limpar todos os campos do formulário? Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          <div class="items-center px-4 py-3">
+            <button id="confirm-yes" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+              Sim, Limpar
+            </button>
+            <button id="confirm-no" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-5xl mx-auto">
         
@@ -52,12 +72,10 @@
             <div class="border-b-2 border-gray-200 py-4">
                 <h1 class="text-lg font-bold tracking-wide text-gray-700">10º BPM/PMMA</h1>
                 <p class="text-sm text-gray-500">2ª CIA - DPM DE TURIAÇU</p>
-                        <div class="text-center mt-2">
-            <a href="home.html" class="text-gray-500 hover:text-gray-700 transition-colors">← Voltar ao Início</a>
-        </div>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-4">FORMULÁRIO DE BOLETIM DE OCORRÊNCIA</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">FORMULÁRIO DE BOLETIM DE OCORRÊNCIA</h2>
         </header>
+
         <form class="jotform-form" onsubmit="return typeof testSubmitFunction !== 'undefined' &amp;&amp; testSubmitFunction();" action="https://submit.jotform.com/submit/252474593439064" method="post" name="form_252474593439064" id="252474593439064" accept-charset="utf-8" autocomplete="on">
             <input type="hidden" name="formID" value="252474593439064" />
             <input type="hidden" id="JWTContainer" value="" />
@@ -284,10 +302,10 @@
                         </div>
                     </li>
                     <li class="form-line" data-type="control_textarea" id="id_46"><label class="form-label form-label-top form-label-auto" id="label_46" for="input_46" aria-hidden="false"> ARMAS OBJETOS MATERIAIS APREENDIDOS/APRESENTADOS </label>
-                        <div id="cid_46" class="form-input-wide" data-layout="full"> <textarea id="input_46" class="form-textarea" name="q46_armasObjetos" style="width:648px;height:163px" data-component="textarea" aria-labelledby="label_46"></textarea> </div>
+                        <div id="cid_46" class="form-input-wide" data-layout="full"> <textarea id="input_46" class="form-textarea" name="q46_armasObjetos" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_46"></textarea> </div>
                     </li>
                     <li class="form-line" data-type="control_textarea" id="id_47"><label class="form-label form-label-top form-label-auto" id="label_47" for="input_47" aria-hidden="false"> HISTÓRICO (DESCRIÇÃO SUMÁRIA) </label>
-                        <div id="cid_47" class="form-input-wide" data-layout="full"> <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:648px;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> </div>
+                        <div id="cid_47" class="form-input-wide" data-layout="full"> <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> </div>
                     </li>
                     <li id="cid_68" class="form-input-wide" data-type="control_head">
                         <div class="form-header-group  header-default">
@@ -316,12 +334,8 @@
                                 <button id="enviar_whatsapp" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     Enviar Release - WhatsApp
                                 </button>
-
-                                <button id="botao_atualizar" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    Atualizar
-                                </button>
-
-                                <button id="input_reset_59" type="reset" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
+                                
+                                <button id="input_reset_59" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
                                     Limpar
                                 </button>
 
@@ -711,69 +725,131 @@
     </script>
     <script type="text/javascript">
         function enviarViaWhatsApp() {
+            // Cabeçalho estático
+            let mensagem = `*PMMA*\n*CPI*\n*CPA/I-5*\n*10º BPM (PINHEIRO)*\n\n`;
+            mensagem += `*- CMT GERAL: Cel.* Wallace\n`;
+            mensagem += `*- CMT CPI: Cel.* Magalhães\n`;
+            mensagem += `*- CMT CPA/I-5: Ten.* Cel. Fábio\n`;
+            mensagem += `*- CMT 10º BPM: Maj.* Wellington\n\n\n`;
+            
+            // Título
+            mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- \n\n`;
+            
+            // Dados Gerais
             const bo_n = document.getElementById('input_3').value;
             const data_ocorrencia = document.getElementById('lite_mode_67').value;
             const hora_fato = document.getElementById('input_55_timeInput').value;
             const local = document.getElementById('input_5').value;
             const bairro = document.getElementById('input_8').value;
-            const ponto_ref = document.getElementById('input_9').value;
+
+            mensagem += `✅ *DADOS GERAIS DA OCORRÊNCIA:*\n\n`;
+            mensagem += `*- № do BO:* ${bo_n}\n`;
+            mensagem += `*- Data:* ${data_ocorrencia}\n`;
+            mensagem += `*- ⁠Hora:* ${hora_fato}\n`;
+            mensagem += `*- Local:* ${local}, ${bairro}\n`;
+            mensagem += `*- ⁠Município:* Turiaçu-MA\n`;
+            mensagem += `*- ⁠Coord. Latitude:*\n`;
+            mensagem += `*- ⁠Coord. Longitude:*\n\n`;
+            
+            // Dados da Guarnição
+            const relator_nome = document.getElementById('input_58').value;
+            const relator_posto = document.getElementById('input_50').value;
+            
+            mensagem += `✅ *DADOS DA GUARNIÇÃO:*\n\n`;
+            mensagem += `*- Município da Viatura:* Turiaçu-MA\n`;
+            mensagem += `*- ⁠Cmt:* ${relator_posto} ${relator_nome}\n`;
+            mensagem += `*- ⁠Membro:*\n`;
+            mensagem += `*- ⁠Membro:*\n\n`;
+            
+            // Dados dos Envolvidos
+            mensagem += `✅ *DADOS DOS ENVOLVIDOS:*\n\n`;
+            
+            const envolvidosPermitidos = ["Vítima", "Proprietário", "Conduzido", "Outros"];
+
+            function adicionarEnvolvido(num) {
+                const nome = document.getElementById(`input_${[11,20,29,38][num-1]}`).value;
+                if (!nome) return ""; 
+
+                let tipoEnvolvimento = "";
+                const checkboxes = document.querySelectorAll(`input[name="${['q81_typeA[]','q83_envolvimento83[]','q84_envolvimento[]','q85_envolvimento85[]'][num-1]}"]:checked`);
+                if (checkboxes.length > 0) {
+                    tipoEnvolvimento = checkboxes[0].value;
+                }
+                
+                // Ignora se não for um dos tipos permitidos
+                if(!envolvidosPermitidos.includes(tipoEnvolvimento)) return "";
+
+                const residencia = document.getElementById(`input_${[13,22,31,40][num-1]}`).value;
+                const n_casa = document.getElementById(`input_${[16,25,34,43][num-1]}`).value;
+                const bairro_env = document.getElementById(`input_${[15,24,33,42][num-1]}`).value;
+                const cidade_env = document.getElementById(`input_${[14,23,32,41][num-1]}`).value;
+                const endereco = `${residencia}, N° ${n_casa}, ${bairro_env}, ${cidade_env}`;
+                const cpf = document.getElementById(`input_${[17,26,35,44][num-1]}`).value;
+
+                let label = tipoEnvolvimento;
+                // Mapeia "Conduzido" para "Suspeito" se necessário, ou mantém o original.
+                if(label === "Conduzido") label = "Suspeito";
+
+                return `*- ${label}:* ${nome}\n*- ⁠Endereço:* ${endereco}\n*- ⁠Contato:*\n*- CPF:* ${cpf}\n\n`;
+            }
+
+            let envolvidos_texto = "";
+            envolvidos_texto += adicionarEnvolvido(1);
+            envolvidos_texto += adicionarEnvolvido(2);
+            envolvidos_texto += adicionarEnvolvido(3);
+            envolvidos_texto += adicionarEnvolvido(4);
+
+            if(envolvidos_texto === "") {
+                envolvidos_texto = "Nenhum envolvido (Vítima, Proprietário, Conduzido ou Outros) foi adicionado.\n\n";
+            }
+
+            mensagem += envolvidos_texto;
+            
+            // Materiais e Providências
             const material_apreendido = document.getElementById('input_46').value;
             const relatorio = document.getElementById('input_47').value;
-            let mensagem = `*POLÍCIA MILITAR DO MARANHÃO*\n`;
-            mensagem += `*CPI / CPAI-5 / 10º BPM*\n\n`;
-            mensagem += `*TÍTULO DA OCORRÊNCIA:*\n\n`;
-            mensagem += `*BO №:* ${bo_n}\n`;
-            mensagem += `*Data:* ${data_ocorrencia}\n`;
-            mensagem += `*Hora:* ${hora_fato}\n`;
-            const localCompleto = [local, bairro, ponto_ref].filter(Boolean).join(', ');
-            mensagem += `*Local:* ${localCompleto}\n`;
-            mensagem += `*Localização:*\n\n`;
-            mensagem += `*Procedimentos adotados:*\n\n`;
-            let envolvidos_texto = "";
-            function adicionarEnvolvido(num, nome_id, cpf_id, endereco_id) {
-                const nome = document.getElementById(nome_id).value;
-                if (!nome) return ""; 
-                const cpf = document.getElementById(cpf_id).value;
-                const residencia = document.getElementById(endereco_id).value;
-                let tipoEnvolvimento = "";
-                let checkboxes;
-                if (num === 1) checkboxes = document.querySelectorAll('input[name="q81_typeA[]"]:checked');
-                if (num === 2) checkboxes = document.querySelectorAll('input[name="q83_envolvimento83[]"]:checked');
-                if (num === 3) checkboxes = document.querySelectorAll('input[name="q84_envolvimento[]"]:checked');
-                if (num === 4) checkboxes = document.querySelectorAll('input[name="q85_envolvimento85[]"]:checked');
-                if (checkboxes && checkboxes.length > 0) {
-                    tipoEnvolvimento = checkboxes[0].value;
-                } else {
-                    return "";
-                }
-                const validos = ["Vítima", "Conduzido", "Proprietário", "Outros"];
-                if (validos.includes(tipoEnvolvimento)) {
-                    return `*${tipoEnvolvimento.toUpperCase()}:*\nNome: ${nome}\nCPF: ${cpf}\nEndereço: ${residencia}\n\n`;
-                }
-                return "";
-            }
-            envolvidos_texto += adicionarEnvolvido(1, 'input_11', 'input_17', 'input_13');
-            envolvidos_texto += adicionarEnvolvido(2, 'input_20', 'input_26', 'input_22');
-            envolvidos_texto += adicionarEnvolvido(3, 'input_29', 'input_35', 'input_31');
-            envolvidos_texto += adicionarEnvolvido(4, 'input_38', 'input_44', 'input_40');
-            mensagem += envolvidos_texto;
-            mensagem += `*Material Apreendido/apresentado:*\n${material_apreendido}\n\n`;
-            mensagem += `*Relatório:*\n${relatorio}\n\n`;
-            mensagem += `*Guarnição:*`
+            
+            mensagem += `✅ *MATERIAIS/OBJETOS APREENDIDOS E APRESENTADOS:*\n${material_apreendido}\n\n`;
+            mensagem += `✅ *PROVIDÊNCIAS ADOTADAS:*\n- \n\n`;
+            mensagem += `✅ *RELATÓRIO DA OCORRÊNCIA:*\n- ${relatorio}`;
+
             const numero = "+5598985342874";
             const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
             window.open(urlWhatsApp, '_blank');
         }
-        // Conecta as funções aos botões
-        document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
-        document.getElementById('botao_atualizar').addEventListener('click', function() {
-            location.reload();
+        
+        // --- Lógica do Modal de Confirmação ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmModal = document.getElementById('confirm-modal');
+            const confirmYesBtn = document.getElementById('confirm-yes');
+            const confirmNoBtn = document.getElementById('confirm-no');
+            const aplicationForm = document.getElementById('252474593439064');
+            const resetButton = document.getElementById('input_reset_59');
+
+            if(resetButton) {
+                resetButton.addEventListener('click', function(event) {
+                    event.preventDefault(); // Impede o reset imediato
+                    confirmModal.classList.remove('hidden');
+                });
+            }
+
+            if(confirmYesBtn) {
+                confirmYesBtn.addEventListener('click', () => {
+                  aplicationForm.reset();
+                  confirmModal.classList.add('hidden');
+                });
+            }
+
+            if(confirmNoBtn) {
+                confirmNoBtn.addEventListener('click', () => {
+                  confirmModal.classList.add('hidden');
+                });
+            }
+            
+            // Conecta as outras funções aos botões
+            document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
         });
+
     </script>
 </body>
 </html>
-
-
-
-
-
