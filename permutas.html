@@ -1,9 +1,12 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Permuta de Serviço Oficial</title>
+    <!-- Inclui o Tailwind CSS para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclui a biblioteca de ícones Lucide para uma interface mais visual -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -31,6 +34,7 @@
 </head>
 <body class="p-4 sm:p-6 md:p-8">
 
+    <!-- Alerta Customizado -->
     <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-[9999] p-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
@@ -42,8 +46,10 @@
         </div>
     </div>
 
+    <!-- Container Principal do Formulário -->
     <div class="printable-form bg-white rounded-2xl shadow-3d p-6 md:p-10 max-w-5xl mx-auto">
         
+        <!-- Cabeçalho -->
         <header class="text-center mb-10">
             <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" alt="Brasão da Polícia Militar do Maranhão" class="w-20 h-auto mx-auto mb-4 no-print">
             <div class="border-b-2 border-gray-200 py-4">
@@ -52,6 +58,7 @@
                 <p class="text-sm text-gray-500">10º BATALHÃO DA POLÍCIA MILITAR - 2ª CIA</p>
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">Formulário de Permuta de Serviço</h2>
+            <!-- JANELA DE SELEÇÃO DE LOCALIZAÇÃO -->
             <div class="flex justify-center -mt-1 mb-8">
                 <select id="localizacaoSelect" class="w-full max-w-xs p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg text-center text-lg font-semibold text-gray-600">
                     <option value="TURIAÇU">TURIAÇU</option>
@@ -61,7 +68,9 @@
             </div>
         </header>
 
+        <!-- Seção de Identificação dos Policiais -->
         <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Card PM Substituído -->
             <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">1. PM Substituído</h3>
                 <div class="space-y-4">
@@ -79,6 +88,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Card PM Substituto -->
             <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">2. PM Substituto</h3>
                 <div class="space-y-4">
@@ -98,9 +108,11 @@
             </div>
         </div>
 
+        <!-- Seção de Datas -->
         <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
             <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">3. Datas da Permuta</h3>
             <div class="grid md:grid-cols-2 gap-8">
+                <!-- Calendário para Serviço Permutado -->
                 <div class="flex flex-col">
                     <label class="text-base font-semibold text-gray-700 mb-2">Data(s) do Serviço Permutado:</label>
                     <p class="text-xs text-gray-500 mb-3">Clique para selecionar um intervalo de até 3 dias.</p>
@@ -109,6 +121,7 @@
                     <input type="hidden" id="dataServicoPermutadoFim">
                     <p id="dataServicoPermutadoWarning" class="text-sm text-red-600 mt-3 hidden font-semibold text-center">É necessário selecionar um intervalo de datas.</p>
                 </div>
+                <!-- Datas do Pagamento -->
                 <div class="flex flex-col">
                      <div class="flex items-center justify-between mb-2">
                         <label class="text-base font-semibold text-gray-700">Data(s) do Pagamento:</label>
@@ -128,6 +141,16 @@
             </div>
         </div>
         
+        <!-- Seção do Comandante -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200 no-print">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">4. Autorização</h3>
+            <div>
+                <label for="comandanteNome" class="text-sm font-medium text-gray-600 block mb-1">Nome do Comandante (para impressão):</label>
+                <input type="text" id="comandanteNome" value="JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
         <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-10 border-t-2 border-gray-100 pt-8">
             <button onclick="printForm()" class="w-full md:w-auto bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 flex items-center justify-center gap-2">
                 <i data-lucide="check-circle" class="w-5 h-5"></i>
@@ -138,13 +161,9 @@
                 <span>Ir para o GOV.BR</span>
             </button>
         </div>
-        <div class="text-center mt-6 no-print">
-            <a href="home.html" class="text-gray-500 hover:text-gray-700 transition-colors">Voltar ao Início</a>
-        </div>
     </div>
 
     <script>
-        // ... (todo o conteúdo do <script> original permanece aqui, sem alterações) ...
         // Inicializa a biblioteca de ícones Lucide
         lucide.createIcons();
         
@@ -408,6 +427,7 @@
             const pagamentoInicio = document.getElementById('dataPagamentoServicoInicio').value;
             const pagamentoFim = document.getElementById('dataPagamentoServicoFim').value;
             const noPagamento = document.getElementById('noPagamentoCheckbox').checked;
+            const comandanteNome = document.getElementById('comandanteNome').value;
 
             const localizacaoSelecionada = document.getElementById('localizacaoSelect').value;
 
@@ -478,7 +498,7 @@
                     <div class="text-center" style="margin-top: 2rem;">
                         <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
                         <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
-                        <p class="text-based" style="margin-top: 0.2rem; margin-bottom: 0;">CAP QOPM <b>RÔMULO</b> ALMEIDA RIBEIRO</p>
+                        <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandanteNome.toUpperCase()}</p>
                         <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
                     </div>
                 </div></body></html>`;
@@ -507,6 +527,4 @@
         });
     </script>
 </body>
-
 </html>
-
