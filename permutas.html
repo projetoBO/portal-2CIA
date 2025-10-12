@@ -1,870 +1,540 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulário de Boletim de Ocorrência</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Permuta de Serviço Oficial</title>
+    <!-- Inclui o Tailwind CSS para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- TODOS OS SCRIPTS E ESTILOS ORIGINAIS DA JOTFORM RESTAURADOS -->
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/prototype.forms.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/jotform.forms.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/maskedinput_5.0.9.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/jotStorage.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/autoFill.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-pdfimporter-patch.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-form-branding-footer.js" type="text/javascript" defer=""></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/smoothscroll.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/errorNavigation.js" type="text/javascript"></script>
-
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/stylebuilder/static/form-common.css?v=4794b7e" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/themes/CSS/defaultV2.css?v=4794b7e" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/themes/CSS/548b1325700cc48d318b4567.css?v=3.3.65295&amp;themeRevisionID=64ff099762313412041c01ae" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_styles.css?3.3.65295" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_feature.css?3.3.65295" />
-
+    <!-- Inclui a biblioteca de ícones Lucide para uma interface mais visual -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #483D8B;
+            background-color: #483D8B; /* Um cinza mais suave para o fundo */
         }
-        .jotform-form {
-            background-color: white !important;
+        /* Estilos para a impressão e geração de PDF */
+        @media print {
+            body { background-color: white; margin: 0; padding: 0; }
+            .no-print { display: none; }
+            .printable-form { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            input[type="text"], input[type="date"], input[type="tel"] { border: none !important; border-bottom: 1px solid #ccc !important; padding: 2px 0 !important; -color: white !important; }
         }
-        [class*="branding-footer"] {
-            display: none !important;
-        }
-        .form-textarea{
-            resize: vertical;
-        }
-    </style>
+        .input-error { border-color: #ef4444 !important; --tw-ring-color: #ef4444 !important; }
+        .shadow-3d { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
 
+        /* Estilos para o Calendário Interativo */
+        .calendar-day { transition: all 0.2s ease-in-out; }
+        .calendar-day:not(.disabled):hover { background-color: #dbeafe; color: #1d4ed8; }
+        .day-selected { background-color: #2563eb !important; color: white !important; font-weight: bold; }
+        .day-in-range { background-color: #93c5fd; color: #1e40af; }
+        .day-disabled { color: #9ca3af; cursor: not-allowed; }
+    </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8">
-    
-    <!-- Modal de Confirmação -->
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-      <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">Confirmar Limpeza</h3>
-          <div class="mt-2 px-7 py-3">
-            <p class="text-sm text-gray-500">
-              Tem certeza que deseja limpar todos os campos do formulário? Esta ação não pode ser desfeita.
-            </p>
-          </div>
-          <div class="items-center px-4 py-3">
-            <button id="confirm-yes" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-              Sim, Limpar
-            </button>
-            <button id="confirm-no" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
-              Cancelar
-            </button>
-          </div>
+
+    <!-- Alerta Customizado -->
+    <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-[9999] p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2" id="alert-title"></h3>
+            <p class="text-gray-600 mb-6" id="alert-message"></p>
+            <button onclick="closeCustomAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300">OK</button>
         </div>
-      </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-5xl mx-auto">
+    <!-- Container Principal do Formulário -->
+    <div class="printable-form bg-white rounded-2xl shadow-3d p-6 md:p-10 max-w-5xl mx-auto">
         
+        <!-- Cabeçalho -->
         <header class="text-center mb-10">
-            <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" alt="Brasão da Polícia Militar do Maranhão" class="w-20 h-auto mx-auto mb-4">
+            <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" alt="Brasão da Polícia Militar do Maranhão" class="w-20 h-auto mx-auto mb-4 no-print">
             <div class="border-b-2 border-gray-200 py-4">
                 <h1 class="text-lg font-bold tracking-wide text-gray-700">ESTADO DO MARANHÃO</h1>
                 <p class="text-sm text-gray-500">SECRETARIA DE SEGURANÇA PÚBLICA</p>
                 <p class="text-sm text-gray-500">10º BATALHÃO DA POLÍCIA MILITAR - 2ª CIA</p>
             </div>
-             <div class="text-center mt-4">
-                <a href="home.html" class="text-blue-600 hover:text-blue-800 transition-colors font-semibold">← Voltar ao Início</a>
+            <div class="mt-8 no-print">
+                <a href="https://projetobo.github.io/portal-2CIA/home.html" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Voltar ao Início</span>
+                </a>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">FORMULÁRIO DE BOLETIM DE OCORRÊNCIA</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-4">Formulário de Permuta de Serviço</h2>
+            <!-- JANELA DE SELEÇÃO DE LOCALIZAÇÃO -->
+            <div class="flex justify-center -mt-1 mb-8">
+                <select id="localizacaoSelect" class="w-full max-w-xs p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg text-center text-lg font-semibold text-gray-600">
+                    <option value="TURIAÇU">TURIAÇU</option>
+                    <option value="SEDE">SEDE</option>
+                    <option value="TURILÂNDIA">TURILÂNDIA</option>
+                </select>
+            </div>
         </header>
 
-        <form class="jotform-form" onsubmit="return typeof testSubmitFunction !== 'undefined' &amp;&amp; testSubmitFunction();" action="https://submit.jotform.com/submit/252474593439064" method="post" name="form_252474593439064" id="252474593439064" accept-charset="utf-8" autocomplete="on">
-            <input type="hidden" name="formID" value="252474593439064" />
-            <input type="hidden" id="JWTContainer" value="" />
-            <input type="hidden" id="cardinalOrderNumber" value="" />
-            
-            <div role="main" class="form-all">
-                <ul class="form-section page-section" role="presentation">
-                    <li class="form-line" data-type="control_textbox" id="id_3"><label class="form-label form-label-top form-label-auto" id="label_3" for="input_3" aria-hidden="false"> BO N° </label>
-                        <div id="cid_3" class="form-input-wide" data-layout="half"> <input type="text" id="input_3" name="q3_boN" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_3" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_54"><label class="form-label form-label-top form-label-auto" id="label_54" aria-hidden="false"> AUTORIA </label>
-                        <div id="cid_54" class="form-input-wide" data-layout="full">
-                        <div class="form-single-column" role="group" aria-labelledby="label_54" data-component="checkbox"><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_54" type="checkbox" class="form-checkbox" id="input_54_0" name="q54_autoria[]" value="Conhecida" /><label id="label_input_54_0" for="input_54_0">Conhecida</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_54" type="checkbox" class="form-checkbox" id="input_54_1" name="q54_autoria[]" value="Desconhecida" /><label id="label_input_54_1" for="input_54_1">Desconhecida</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_time" id="id_55"><label class="form-label form-label-top form-label-auto" id="label_55" for="input_55_hourSelect" aria-hidden="false"> HORA DO FATO </label>
-                        <div id="cid_55" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div class="time-wrapper"><span class="form-sub-label-container" style="vertical-align:top"><input class="time-dropdown form-textbox validate[time]" id="input_55_timeInput" name="q55_time[timeInput]" type="text" placeholder="HH : MM" aria-labelledby="label_55 sublabel_55_hour" data-mask="HH:MM" autocomplete="off" data-version="v2" value="" /><input type="hidden" class="form-hidden-time" id="input_55_hourSelect" name="q55_time[hourSelect]" /><input type="hidden" class="form-hidden-time" id="input_55_minuteSelect" name="q55_time[minuteSelect]" /><label data-seperate-translate="true" class="form-sub-label" for="input_55_timeInput" id="sublabel_55_hour" style="min-height:13px">Hour Minutes</label></span></div>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_67"><label class="form-label form-label-top form-label-auto" id="label_67" for="lite_mode_67" aria-hidden="false"> DATA DA OCORRÊNCIA </label>
-                        <div id="cid_67" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_67" name="q67_dataDa[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_67 sublabel_67_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_67" id="sublabel_67_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_67" name="q67_dataDa[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_67 sublabel_67_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_67" id="sublabel_67_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_67" name="q67_dataDa[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_67 sublabel_67_year" value="" /><label class="form-sub-label" for="year_67" id="sublabel_67_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_67" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_67 sublabel_67_litemode" value="" name="q67_dataDa[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_67_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_67" id="sublabel_67_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_5"><label class="form-label form-label-top form-label-auto" id="label_5" for="input_5" aria-hidden="false"> LOCAL DA OCORRÊNCIA </label>
-                        <div id="cid_5" class="form-input-wide" data-layout="half"> <input type="text" id="input_5" name="q5_localDa" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_5" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_8"><label class="form-label form-label-top form-label-auto" id="label_8" for="input_8" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_8" class="form-input-wide" data-layout="half"> <input type="text" id="input_8" name="q8_bairro" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_8" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_9"><label class="form-label form-label-top form-label-auto" id="label_9" for="input_9" aria-hidden="false"> PONTO DE REF </label>
-                        <div id="cid_9" class="form-input-wide" data-layout="half"> <input type="text" id="input_9" name="q9_pontoDe" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_9" value="" /> </div>
-                    </li>
-                    <li id="cid_10" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_10" class="form-header" data-component="header">ENVOLVIDO 1:</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_81"><label class="form-label form-label-top form-label-auto" id="label_81" aria-hidden="false"> ENVOLVIMENTO </label>
-                        <div id="cid_81" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="2" role="group" aria-labelledby="label_81" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_0" name="q81_typeA[]" data-maxselection="1" value="Condutor" /><label id="label_input_81_0" for="input_81_0">Condutor</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_1" name="q81_typeA[]" data-maxselection="1" value="Testemunha" /><label id="label_input_81_1" for="input_81_1">Testemunha</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_2" name="q81_typeA[]" data-maxselection="1" value="Vítima" /><label id="label_input_81_2" for="input_81_2">Vítima</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_3" name="q81_typeA[]" data-maxselection="1" value="Conduzido" /><label id="label_input_81_3" for="input_81_3">Conduzido</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_4" name="q81_typeA[]" data-maxselection="1" value="Proprietário" /><label id="label_input_81_4" for="input_81_4">Proprietário</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_81" type="checkbox" class="form-checkbox validate[maxselection]" id="input_81_5" name="q81_typeA[]" data-maxselection="1" value="Outros" /><label id="label_input_81_5" for="input_81_5">Outros</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_11"><label class="form-label form-label-top form-label-auto" id="label_11" for="input_11" aria-hidden="false"> NOME </label>
-                        <div id="cid_11" class="form-input-wide" data-layout="half"> <input type="text" id="input_11" name="q11_nome" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_11" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_71"><label class="form-label form-label-top form-label-auto" id="label_71" for="lite_mode_71" aria-hidden="false"> DATA DE NASCIMENTO </label>
-                        <div id="cid_71" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_71" name="q71_dataDe71[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_71 sublabel_71_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_71" id="sublabel_71_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_71" name="q71_dataDe71[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_71 sublabel_71_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_71" id="sublabel_71_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_71" name="q71_dataDe71[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_71 sublabel_71_year" value="" /><label class="form-sub-label" for="year_71" id="sublabel_71_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_71" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_71 sublabel_71_litemode" value="" name="q71_dataDe71[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_71_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_71" id="sublabel_71_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_13"><label class="form-label form-label-top form-label-auto" id="label_13" for="input_13" aria-hidden="false"> RESIDÊNCIA </label>
-                        <div id="cid_13" class="form-input-wide" data-layout="half"> <input type="text" id="input_13" name="q13_residencia" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_13" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_14"><label class="form-label form-label-top form-label-auto" id="label_14" for="input_14" aria-hidden="false"> CIDADE </label>
-                        <div id="cid_14" class="form-input-wide" data-layout="half"> <input type="text" id="input_14" name="q14_cidade" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_14" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_15"><label class="form-label form-label-top form-label-auto" id="label_15" for="input_15" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_15" class="form-input-wide" data-layout="half"> <input type="text" id="input_15" name="q15_bairro15" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_15" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_16"><label class="form-label form-label-top form-label-auto" id="label_16" for="input_16" aria-hidden="false"> N° DA CASA </label>
-                        <div id="cid_16" class="form-input-wide" data-layout="half"> <input type="text" id="input_16" name="q16_nDa" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_16" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_90"><label class="form-label form-label-top form-label-auto" id="label_90" for="input_90" aria-hidden="false"> Contato (Opcional) </label>
-                        <div id="cid_90" class="form-input-wide" data-layout="half"> <input type="text" id="input_90" name="q90_contato1" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_90" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_86"><label class="form-label form-label-top form-label-auto" id="label_86" aria-hidden="false"> TIPO DE DOCUMENTO </label>
-                        <div id="cid_86" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="3" role="group" aria-labelledby="label_86" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_86" type="checkbox" class="form-checkbox" id="input_86_0" name="q86_tipoDe[]" value="CPF" /><label id="label_input_86_0" for="input_86_0">CPF</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_86" type="checkbox" class="form-checkbox" id="input_86_1" name="q86_tipoDe[]" value="CI" /><label id="label_input_86_1" for="input_86_1">CI</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_86" type="checkbox" class="form-checkbox" id="input_86_2" name="q86_tipoDe[]" value="CNH" /><label id="label_input_86_2" for="input_86_2">CNH</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_17"><label class="form-label form-label-top form-label-auto" id="label_17" for="input_17" aria-hidden="false"> Nº DO DOCUMENTO </label>
-                        <div id="cid_17" class="form-input-wide" data-layout="half"> <input type="text" id="input_17" name="q17_nDo" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_17" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_18"><label class="form-label form-label-top form-label-auto" id="label_18" for="input_18" aria-hidden="false"> PROFISSÃO </label>
-                        <div id="cid_18" class="form-input-wide" data-layout="half"> <input type="text" id="input_18" name="q18_profissao" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_18" value="" /> </div>
-                    </li>
-                    <li id="cid_19" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_19" class="form-header" data-component="header">ENVOLVIDO 2:</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_83"><label class="form-label form-label-top form-label-auto" id="label_83" aria-hidden="false"> ENVOLVIMENTO </label>
-                        <div id="cid_83" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="2" role="group" aria-labelledby="label_83" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_0" name="q83_envolvimento83[]" data-maxselection="1" value="Condutor" /><label id="label_input_83_0" for="input_83_0">Condutor</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_1" name="q83_envolvimento83[]" data-maxselection="1" value="Testemunha" /><label id="label_input_83_1" for="input_83_1">Testemunha</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_2" name="q83_envolvimento83[]" data-maxselection="1" value="Vítima" /><label id="label_input_83_2" for="input_83_2">Vítima</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_3" name="q83_envolvimento83[]" data-maxselection="1" value="Conduzido" /><label id="label_input_83_3" for="input_83_3">Conduzido</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_4" name="q83_envolvimento83[]" data-maxselection="1" value="Proprietário" /><label id="label_input_83_4" for="input_83_4">Proprietário</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_83" type="checkbox" class="form-checkbox validate[maxselection]" id="input_83_5" name="q83_envolvimento83[]" data-maxselection="1" value="Outros" /><label id="label_input_83_5" for="input_83_5">Outros</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_20"><label class="form-label form-label-top form-label-auto" id="label_20" for="input_20" aria-hidden="false"> NOME </label>
-                        <div id="cid_20" class="form-input-wide" data-layout="half"> <input type="text" id="input_20" name="q20_nome20" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_20" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_73"><label class="form-label form-label-top form-label-auto" id="label_73" for="lite_mode_73" aria-hidden="false"> DATA DE NASCIMENTO </label>
-                        <div id="cid_73" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_73" name="q73_dataDe[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_73 sublabel_73_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_73" id="sublabel_73_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_73" name="q73_dataDe[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_73 sublabel_73_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_73" id="sublabel_73_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_73" name="q73_dataDe[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_73 sublabel_73_year" value="" /><label class="form-sub-label" for="year_73" id="sublabel_73_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_73" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_73 sublabel_73_litemode" value="" name="q73_dataDe[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_73_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_73" id="sublabel_73_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_22"><label class="form-label form-label-top form-label-auto" id="label_22" for="input_22" aria-hidden="false"> RESIDÊNCIA </label>
-                        <div id="cid_22" class="form-input-wide" data-layout="half"> <input type="text" id="input_22" name="q22_residencia22" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_22" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_23"><label class="form-label form-label-top form-label-auto" id="label_23" for="input_23" aria-hidden="false"> CIDADE </label>
-                        <div id="cid_23" class="form-input-wide" data-layout="half"> <input type="text" id="input_23" name="q23_cidade23" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_23" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_24"><label class="form-label form-label-top form-label-auto" id="label_24" for="input_24" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_24" class="form-input-wide" data-layout="half"> <input type="text" id="input_24" name="q24_bairro24" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_24" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_25"><label class="form-label form-label-top form-label-auto" id="label_25" for="input_25" aria-hidden="false"> N° DA CASA </label>
-                        <div id="cid_25" class="form-input-wide" data-layout="half"> <input type="text" id="input_25" name="q25_n25" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_25" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_91"><label class="form-label form-label-top form-label-auto" id="label_91" for="input_91" aria-hidden="false"> Contato (Opcional) </label>
-                        <div id="cid_91" class="form-input-wide" data-layout="half"> <input type="text" id="input_91" name="q91_contato2" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_91" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_87"><label class="form-label form-label-top form-label-auto" id="label_87" aria-hidden="false"> TIPO DE DOCUMENTO </label>
-                        <div id="cid_87" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="3" role="group" aria-labelledby="label_87" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_87" type="checkbox" class="form-checkbox" id="input_87_0" name="q87_tipoDe87[]" value="CPF" /><label id="label_input_87_0" for="input_87_0">CPF</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_87" type="checkbox" class="form-checkbox" id="input_87_1" name="q87_tipoDe87[]" value="CI" /><label id="label_input_87_1" for="input_87_1">CI</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_87" type="checkbox" class="form-checkbox" id="input_87_2" name="q87_tipoDe87[]" value="CNH" /><label id="label_input_87_2" for="input_87_2">CNH</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_26"><label class="form-label form-label-top form-label-auto" id="label_26" for="input_26" aria-hidden="false"> N° DO DOCUMENTO </label>
-                        <div id="cid_26" class="form-input-wide" data-layout="half"> <input type="text" id="input_26" name="q26_n26" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_26" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_27"><label class="form-label form-label-top form-label-auto" id="label_27" for="input_27" aria-hidden="false"> PROFISSÃO </label>
-                        <div id="cid_27" class="form-input-wide" data-layout="half"> <input type="text" id="input_27" name="q27_profissao27" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_27" value="" /> </div>
-                    </li>
-                    <li id="cid_28" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_28" class="form-header" data-component="header">ENVOLVIDOS 3:</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_84"><label class="form-label form-label-top form-label-auto" id="label_84" aria-hidden="false"> ENVOLVIMENTO </label>
-                        <div id="cid_84" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="2" role="group" aria-labelledby="label_84" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_0" name="q84_envolvimento[]" data-maxselection="1" value="Condutor" /><label id="label_input_84_0" for="input_84_0">Condutor</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_1" name="q84_envolvimento[]" data-maxselection="1" value="Testemunha" /><label id="label_input_84_1" for="input_84_1">Testemunha</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_2" name="q84_envolvimento[]" data-maxselection="1" value="Vítima" /><label id="label_input_84_2" for="input_84_2">Vítima</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_3" name="q84_envolvimento[]" data-maxselection="1" value="Conduzido" /><label id="label_input_84_3" for="input_84_3">Conduzido</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_4" name="q84_envolvimento[]" data-maxselection="1" value="Proprietário" /><label id="label_input_84_4" for="input_84_4">Proprietário</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_84" type="checkbox" class="form-checkbox validate[maxselection]" id="input_84_5" name="q84_envolvimento[]" data-maxselection="1" value="Outros" /><label id="label_input_84_5" for="input_84_5">Outros</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_29"><label class="form-label form-label-top form-label-auto" id="label_29" for="input_29" aria-hidden="false"> NOME </label>
-                        <div id="cid_29" class="form-input-wide" data-layout="half"> <input type="text" id="input_29" name="q29_nome29" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_29" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_74"><label class="form-label form-label-top form-label-auto" id="label_74" for="lite_mode_74" aria-hidden="false"> DATA DE NASCIMENTO </label>
-                        <div id="cid_74" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_74" name="q74_dataDe74[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_74 sublabel_74_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_74" id="sublabel_74_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_74" name="q74_dataDe74[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_74 sublabel_74_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_74" id="sublabel_74_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_74" name="q74_dataDe74[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_74 sublabel_74_year" value="" /><label class="form-sub-label" for="year_74" id="sublabel_74_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_74" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_74 sublabel_74_litemode" value="" name="q74_dataDe74[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_74_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_74" id="sublabel_74_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_31"><label class="form-label form-label-top form-label-auto" id="label_31" for="input_31" aria-hidden="false"> RESIDÊNCIA </label>
-                        <div id="cid_31" class="form-input-wide" data-layout="half"> <input type="text" id="input_31" name="q31_residencia31" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_31" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_32"><label class="form-label form-label-top form-label-auto" id="label_32" for="input_32" aria-hidden="false"> CIDADE </label>
-                        <div id="cid_32" class="form-input-wide" data-layout="half"> <input type="text" id="input_32" name="q32_cidade32" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_32" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_33"><label class="form-label form-label-top form-label-auto" id="label_33" for="input_33" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_33" class="form-input-wide" data-layout="half"> <input type="text" id="input_33" name="q33_bairro33" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_33" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_34"><label class="form-label form-label-top form-label-auto" id="label_34" for="input_34" aria-hidden="false"> N° DA CASA </label>
-                        <div id="cid_34" class="form-input-wide" data-layout="half"> <input type="text" id="input_34" name="q34_n34" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_34" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_92"><label class="form-label form-label-top form-label-auto" id="label_92" for="input_92" aria-hidden="false"> Contato (Opcional) </label>
-                        <div id="cid_92" class="form-input-wide" data-layout="half"> <input type="text" id="input_92" name="q92_contato3" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_92" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_88"><label class="form-label form-label-top form-label-auto" id="label_88" aria-hidden="false"> TIPO DE DOCUMENTO </label>
-                        <div id="cid_88" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="3" role="group" aria-labelledby="label_88" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_0" name="q88_tipoDe88[]" value="CPF" /><label id="label_input_88_0" for="input_88_0">CPF</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_1" name="q88_tipoDe88[]" value="CI" /><label id="label_input_88_1" for="input_88_1">CI</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_2" name="q88_tipoDe88[]" value="CNH" /><label id="label_input_88_2" for="input_88_2">CNH</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_35"><label class="form-label form-label-top form-label-auto" id="label_35" for="input_35" aria-hidden="false"> N° DO DOCUMENTO </label>
-                        <div id="cid_35" class="form-input-wide" data-layout="half"> <input type="text" id="input_35" name="q35_n35" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_35" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_36"><label class="form-label form-label-top form-label-auto" id="label_36" for="input_36" aria-hidden="false"> PROFISSÃO </label>
-                        <div id="cid_36" class="form-input-wide" data-layout="half"> <input type="text" id="input_36" name="q36_profissao36" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_36" value="" /> </div>
-                    </li>
-                    <li id="cid_37" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_37" class="form-header" data-component="header">ENVOLVIDO 4:</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_85"><label class="form-label form-label-top form-label-auto" id="label_85" aria-hidden="false"> ENVOLVIMENTO </label>
-                        <div id="cid_85" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="2" role="group" aria-labelledby="label_85" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_0" name="q85_envolvimento85[]" data-maxselection="1" value="Condutor" /><label id="label_input_85_0" for="input_85_0">Condutor</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_1" name="q85_envolvimento85[]" data-maxselection="1" value="Testemunha" /><label id="label_input_85_1" for="input_85_1">Testemunha</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_2" name="q85_envolvimento85[]" data-maxselection="1" value="Vítima" /><label id="label_input_85_2" for="input_85_2">Vítima</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_3" name="q85_envolvimento85[]" data-maxselection="1" value="Conduzido" /><label id="label_input_85_3" for="input_85_3">Conduzido</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_4" name="q85_envolvimento85[]" data-maxselection="1" value="Proprietário" /><label id="label_input_85_4" for="input_85_4">Proprietário</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_5" name="q85_envolvimento85[]" data-maxselection="1" value="Outros" /><label id="label_input_85_5" for="input_85_5">Outros</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_38"><label class="form-label form-label-top form-label-auto" id="label_38" for="input_38" aria-hidden="false"> NOME </label>
-                        <div id="cid_38" class="form-input-wide" data-layout="half"> <input type="text" id="input_38" name="q38_nome38" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_38" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_75"><label class="form-label form-label-top form-label-auto" id="label_75" for="lite_mode_75" aria-hidden="false"> DATA DE NASCIMENTO </label>
-                        <div id="cid_75" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_75" name="q75_date75[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_75 sublabel_75_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_75" id="sublabel_75_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_75" name="q75_date75[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_75 sublabel_75_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_75" id="sublabel_75_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_75" name="q75_date75[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_75 sublabel_75_year" value="" /><label class="form-sub-label" for="year_75" id="sublabel_75_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_75" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_75 sublabel_75_litemode" value="" name="q75_date75[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_75_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_75" id="sublabel_75_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_40"><label class="form-label form-label-top form-label-auto" id="label_40" for="input_40" aria-hidden="false"> RESIDÊNCIA </label>
-                        <div id="cid_40" class="form-input-wide" data-layout="half"> <input type="text" id="input_40" name="q40_residencia40" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_40" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_41"><label class="form-label form-label-top form-label-auto" id="label_41" for="input_41" aria-hidden="false"> CIDADE </label>
-                        <div id="cid_41" class="form-input-wide" data-layout="half"> <input type="text" id="input_41" name="q41_cidade41" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_41" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_42"><label class="form-label form-label-top form-label-auto" id="label_42" for="input_42" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_42" class="form-input-wide" data-layout="half"> <input type="text" id="input_42" name="q42_bairro42" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_42" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_43"><label class="form-label form-label-top form-label-auto" id="label_43" for="input_43" aria-hidden="false"> N° DA CASA </label>
-                        <div id="cid_43" class="form-input-wide" data-layout="half"> <input type="text" id="input_43" name="q43_n43" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_43" value="" /> </div>
-                    </li>
-                     <li class="form-line" data-type="control_textbox" id="id_93"><label class="form-label form-label-top form-label-auto" id="label_93" for="input_93" aria-hidden="false"> Contato (Opcional) </label>
-                        <div id="cid_93" class="form-input-wide" data-layout="half"> <input type="text" id="input_93" name="q93_contato4" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_93" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_89"><label class="form-label form-label-top form-label-auto" id="label_89" aria-hidden="false"> TIPO DE DOCUMENTO </label>
-                        <div id="cid_89" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="3" role="group" aria-labelledby="label_89" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_89" type="checkbox" class="form-checkbox" id="input_89_0" name="q89_tipoDe89[]" value="CPF" /><label id="label_input_89_0" for="input_89_0">CPF</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_89" type="checkbox" class="form-checkbox" id="input_89_1" name="q89_tipoDe89[]" value="CI" /><label id="label_input_89_1" for="input_89_1">CI</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_89" type="checkbox" class="form-checkbox" id="input_89_2" name="q89_tipoDe89[]" value="CNH" /><label id="label_input_89_2" for="input_89_2">CNH</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_44"><label class="form-label form-label-top form-label-auto" id="label_44" for="input_44" aria-hidden="false"> N° DO DOCUMENTO </label>
-                        <div id="cid_44" class="form-input-wide" data-layout="half"> <input type="text" id="input_44" name="q44_n44" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_44" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_45"><label class="form-label form-label-top form-label-auto" id="label_45" for="input_45" aria-hidden="false"> PROFISSÃO </label>
-                        <div id="cid_45" class="form-input-wide" data-layout="half"> <input type="text" id="input_45" name="q45_profissao45" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_45" value="" /> </div>
-                    </li>
-                    <li id="cid_69" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_69" class="form-header" data-component="header">DESCRIÇÃO DO FATO E MATERIAIS</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textarea" id="id_46"><label class="form-label form-label-top form-label-auto" id="label_46" for="input_46" aria-hidden="false"> ARMAS OBJETOS MATERIAIS APREENDIDOS/APRESENTADOS </label>
-                        <div id="cid_46" class="form-input-wide" data-layout="full"> <textarea id="input_46" class="form-textarea" name="q46_armasObjetos" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_46"></textarea> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textarea" id="id_47"><label class="form-label form-label-top form-label-auto" id="label_47" for="input_47" aria-hidden="false"> HISTÓRICO (DESCRIÇÃO SUMÁRIA) </label>
-                        <div id="cid_47" class="form-input-wide" data-layout="full"> <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> </div>
-                    </li>
-                    <li id="cid_68" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_68" class="form-header" data-component="header">RELATOR</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_50"><label class="form-label form-label-top form-label-auto" id="label_50" for="input_50" aria-hidden="false"> POSTO GRADUAÇÃO </label>
-                        <div id="cid_50" class="form-input-wide" data-layout="half"> <input type="text" id="input_50" name="q50_postoGraduacao" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_50" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_51"><label class="form-label form-label-top form-label-auto" id="label_51" for="input_51" aria-hidden="false"> N° MATRÍCULA </label>
-                        <div id="cid_51" class="form-input-wide" data-layout="half"> <input type="text" id="input_51" name="q51_nMatricula" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_51" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_58"><label class="form-label form-label-top form-label-auto" id="label_58" for="input_58" aria-hidden="false"> NOME </label>
-                        <div id="cid_58" class="form-input-wide" data-layout="half"> <input type="text" id="input_58" name="q58_nome58" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_58" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_button" id="id_59">
-                        <div id="cid_59" class="form-input-wide" data-layout="full">
-                             <div data-align="auto" class="form-buttons-wrapper form-buttons-auto jsTest-button-wrapperField" style="display: flex; justify-content: center; gap: 1rem;">
-                                <button id="input_59" type="submit" class="form-submit-button form-submit-button-reports-400 submit-button jf-form-buttons jsTest-submitField legacy-submit" data-component="button">
-                                    Baixar PDF
-                                </button>
-                                <button id="enviar_whatsapp" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                    Enviar Release - WhatsApp
-                                </button>
-                                <button id="input_reset_59" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
-                                    Limpar
-                                </button>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
+        <!-- Seção de Identificação dos Policiais -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Card PM Substituído -->
+            <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">1. PM Substituído</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
+                        <select id="pmSubstituidoNome" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+                            <option value="" disabled selected>Selecione um PM</option>
+                        </select>
+                        <p id="pmSubstituidoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID:</label>
+                        <input type="tel" id="pmSubstituidoIdentificacao" placeholder="ID será preenchido ou pode ser digitado" pattern="\d*" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+                        <p id="pmSubstituidoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                    </div>
+                </div>
             </div>
-            <div style="display:none">Should be Empty: <input type="hidden" name="website" value="" /></div>
-            <input type="hidden" class="simple_spc" id="simple_spc" name="simple_spc" value="252474593439064" />
-        </form>
+            <!-- Card PM Substituto -->
+            <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">2. PM Substituto</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
+                        <select id="pmSubstitutoNome" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+                            <option value="" disabled selected>Selecione um PM</option>
+                        </select>
+                        <p id="pmSubstitutoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                    </div>
+                    <div>
+                        <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID:</label>
+                        <input type="tel" id="pmSubstitutoIdentificacao" placeholder="ID será preenchido ou pode ser digitado" pattern="\d*" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+                        <p id="pmSubstitutoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div class="text-center mt-6">
-            <a href="home.html" class="text-gray-500 hover:text-gray-700 transition-colors">← Voltar ao Início</a>
+        <!-- Seção de Datas -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">3. Datas da Permuta</h3>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Calendário para Serviço Permutado -->
+                <div class="flex flex-col">
+                    <label class="text-base font-semibold text-gray-700 mb-2">Data(s) do Serviço Permutado:</label>
+                    <p class="text-xs text-gray-500 mb-3">Clique para selecionar um intervalo de até 3 dias.</p>
+                    <div id="calendar-container-service" class="w-full max-w-sm mx-auto bg-white p-4 rounded-lg border"></div>
+                    <input type="hidden" id="dataServicoPermutadoInicio">
+                    <input type="hidden" id="dataServicoPermutadoFim">
+                    <p id="dataServicoPermutadoWarning" class="text-sm text-red-600 mt-3 hidden font-semibold text-center">É necessário selecionar um intervalo de datas.</p>
+                </div>
+                <!-- Datas do Pagamento -->
+                <div class="flex flex-col">
+                     <div class="flex items-center justify-between mb-2">
+                        <label class="text-base font-semibold text-gray-700">Data(s) do Pagamento:</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="noPagamentoCheckbox" class="form-checkbox h-4 w-4 rounded text-blue-600 border-gray-400 focus:ring-blue-500">
+                            <label for="noPagamentoCheckbox" class="text-xs text-gray-600 ml-2 cursor-pointer">Não há pagamento</label>
+                        </div>
+                    </div>
+                    <div id="payment-fields-container">
+                        <p class="text-xs text-gray-500 mb-3">Clique para selecionar um intervalo de até 3 dias.</p>
+                        <div id="calendar-container-payment" class="w-full max-w-sm mx-auto bg-white p-4 rounded-lg border"></div>
+                        <input type="hidden" id="dataPagamentoServicoInicio">
+                        <input type="hidden" id="dataPagamentoServicoFim">
+                        <p id="dataPagamentoWarning" class="text-sm text-red-600 mt-3 hidden font-semibold text-center">É necessário selecionar um intervalo de datas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção do Comandante -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200 no-print">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">4. Autorização</h3>
+            <div>
+                <label for="comandanteNome" class="text-sm font-medium text-gray-600 block mb-1">Nome do Comandante (para impressão):</label>
+                <input type="text" id="comandanteNome" value="JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-10 border-t-2 border-gray-100 pt-8">
+            <button onclick="printForm()" class="w-full md:w-auto bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 flex items-center justify-center gap-2">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span>Concluir e Imprimir</span>
+            </button>
+            <button onclick="signWithGovBr()" class="w-full md:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300 flex items-center justify-center gap-2">
+                <i data-lucide="pen-square" class="w-5 h-5"></i>
+                <span>Ir para o GOV.BR</span>
+            </button>
+            <a href="https://projetobo.github.io/portal-2CIA/home.html" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300 flex items-center justify-center gap-2">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span>Voltar ao Início</span>
+            </a>
         </div>
     </div>
-    
-    <script type="text/javascript">
-      JotForm.newDefaultTheme=false;
-      JotForm.extendsNewTheme=true;
-      JotForm.singleProduct=false;
-      JotForm.newPaymentUIForNewCreatedForms=true;
-      JotForm.init(function(){
-        if(window.JotForm&&JotForm.accessible)
-          $("input_3").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[67]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[67]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("67",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("67",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_5").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_8").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_9").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_11").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[71]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[71]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("71",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("71",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_13").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_14").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_15").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_16").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_17").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_18").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_20").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[73]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[73]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("73",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("73",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_22").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_23").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_24").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_25").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_26").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_27").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_29").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[74]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[74]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("74",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("74",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_31").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_32").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_33").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_34").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_35").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_36").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_38").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[75]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[75]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("75",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("75",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_40").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_41").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_42").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_43").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_44").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_45").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_46").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_47").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_50").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_51").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_58").setAttribute("tabindex",0);
-        setTimeout(function(){
-          JotForm.autoFillInitialize({
-            bindChange:"on",
-            menu:"enable",
-            timeout:"4",
-            ttl:"86400"
-          })
-        },10)
-      });
-    </script>
-    <script type="text/javascript">
-        function enviarViaWhatsApp() {
-            // Cabeçalho estático
-            let mensagem = `*PMMA*\n*CPI*\n*CPA/I-5*\n*10º BPM (PINHEIRO)*\n\n`;
-            mensagem += `*- CMT GERAL: Cel.* Wallace\n`;
-            mensagem += `*- CMT CPI: Cel.* Magalhães\n`;
-            mensagem += `*- CMT CPA/I-5: Ten.* Cel. Fábio\n`;
-            mensagem += `*- CMT 10º BPM: Maj.* Wellington\n\n\n`;
-            
-            // Título
-            mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- \n\n`;
-            
-            // Dados Gerais
-            const bo_n = document.getElementById('input_3').value;
-            const data_ocorrencia = document.getElementById('lite_mode_67').value;
-            const hora_fato = document.getElementById('input_55_timeInput').value;
-            const local = document.getElementById('input_5').value;
-            const bairro = document.getElementById('input_8').value;
 
-            mensagem += `✅ *DADOS GERAIS DA OCORRÊNCIA:*\n\n`;
-            mensagem += `*- № do BO:* ${bo_n}\n`;
-            mensagem += `*- Data:* ${data_ocorrencia}\n`;
-            mensagem += `*- ⁠Hora:* ${hora_fato}\n`;
-            mensagem += `*- Local:* ${local}, ${bairro}\n`;
-            mensagem += `*- ⁠Município:* Turiaçu-MA\n`;
-            mensagem += `*- ⁠Coord. Latitude:*\n`;
-            mensagem += `*- ⁠Coord. Longitude:*\n\n`;
-            
-            // Dados da Guarnição
-            const relator_nome = document.getElementById('input_58').value;
-            const relator_posto = document.getElementById('input_50').value;
-            
-            mensagem += `✅ *DADOS DA GUARNIÇÃO:*\n\n`;
-            mensagem += `*- Município da Viatura:* Turiaçu-MA\n`;
-            mensagem += `*- ⁠Cmt:* ${relator_posto} ${relator_nome}\n`;
-            mensagem += `*- ⁠Membro:*\n`;
-            mensagem += `*- ⁠Membro:*\n\n`;
-            
-            // Dados dos Envolvidos
-            mensagem += `✅ *DADOS DOS ENVOLVIDOS:*\n\n`;
-            
-            const envolvidosPermitidos = ["Vítima", "Proprietário", "Conduzido", "Outros"];
+    <script>
+        // Inicializa a biblioteca de ícones Lucide
+        lucide.createIcons();
+        
+        // --- LÓGICA DO ALERTA CUSTOMIZADO ---
+        function showCustomAlert(title, message) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+        window.closeCustomAlert = function() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        };
+        
+        // --- LÓGICA DE SELEÇÃO E PREENCHIMENTO DOS PMs ---
+        const pmData = {
+            "Cb PM 562/14 Edmilson": "N/A",
+            "Cb PM 626/14 Coriolano": "N/A",
+            "Cb PM 636/14 Massole": "N/A",
+            "Cb PM 915/14 Froes": "N/A",
+            "Cb PM 1042/14 Mário Neto": "N/A",
+            "Cb PM 274/15 J. Froes": "N/A",
+            "Cb PM 372/15 Cruz": "N/A",
+            "Sd PM 473/16 André": "849351",
+            "Sd PM 604/17 Élson": "N/A",
+            "Sd PM 868/17 P. Souza": "N/A",
+            "Sd PM 408/18 Ribeiro": "N/A",
+            "Sd PM 424/18 Rodrigues": "N/A",
+            "Sd PM 885/18 Albert": "N/A",
+            "Sd PM 1034/18 Francinilson": "N/A",
+            "Sd PM 1083/18 Moise": "N/A",
+            "Sd PM 10/20 Garcez": "N/A",
+            "Sd PM 72/20 S. Filho": "N/A",
+            "Sd PM 003/21 Maycon": "N/A",
+            "Sd PM 006/21 Carvalho": "N/A",
+            "Sd PM 171/22 Fonteles": "N/A",
+            "Sd PM 380/22 Soares": "N/A",
+            "Sd PM 429/22 Castro": "N/A",
+            "Sd PM 502/22 Sales": "869293",
+            "Sd PM 572/22 Theodósio": "871896",
+            "Sd PM 246/24 Lobato": "N/A",
+            "Sd PM 457/24 Eduardo Silva": "869987"
+        };
+        
+        const pmSubstituidoNomeSelect = document.getElementById('pmSubstituidoNome');
+        const pmSubstituidoIdentificacaoInput = document.getElementById('pmSubstituidoIdentificacao');
+        const pmSubstitutoNomeSelect = document.getElementById('pmSubstitutoNome');
+        const pmSubstitutoIdentificacaoInput = document.getElementById('pmSubstitutoIdentificacao');
 
-            function adicionarEnvolvido(num) {
-                const nome = document.getElementById(`input_${[11,20,29,38][num-1]}`).value;
-                if (!nome) return ""; 
+        function fillId(selectElement, targetInput) {
+            const selectedName = selectElement.value;
+            targetInput.value = pmData[selectedName] || '';
+            targetInput.dispatchEvent(new Event('input')); // Dispara validação
+        }
 
-                let tipoEnvolvimento = "";
-                const checkboxes = document.querySelectorAll(`input[name="${['q81_typeA[]','q83_envolvimento83[]','q84_envolvimento[]','q85_envolvimento85[]'][num-1]}"]:checked`);
-                if (checkboxes.length > 0) {
-                    tipoEnvolvimento = checkboxes[0].value;
+        function populatePmSelects() {
+            const selects = [pmSubstituidoNomeSelect, pmSubstitutoNomeSelect];
+            selects.forEach(select => {
+                for (const name in pmData) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
                 }
-                
-                // Ignora se não for um dos tipos permitidos
-                if(!envolvidosPermitidos.includes(tipoEnvolvimento)) return "";
-
-                const residencia = document.getElementById(`input_${[13,22,31,40][num-1]}`).value;
-                const n_casa = document.getElementById(`input_${[16,25,34,43][num-1]}`).value;
-                const bairro_env = document.getElementById(`input_${[15,24,33,42][num-1]}`).value;
-                const cidade_env = document.getElementById(`input_${[14,23,32,41][num-1]}`).value;
-                const endereco = `${residencia}, N° ${n_casa}, ${bairro_env}, ${cidade_env}`;
-                const contato = document.getElementById(`input_${[90,91,92,93][num-1]}`).value;
-                const cpf = document.getElementById(`input_${[17,26,35,44][num-1]}`).value;
-
-                let label = tipoEnvolvimento;
-                // Mapeia "Conduzido" para "Suspeito" se necessário, ou mantém o original.
-                if(label === "Conduzido") label = "Suspeito";
-
-                return `*- ${label}:* ${nome}\n*- ⁠Endereço:* ${endereco}\n*- ⁠Contato:* ${contato}\n*- CPF:* ${cpf}\n\n`;
-            }
-
-            let envolvidos_texto = "";
-            envolvidos_texto += adicionarEnvolvido(1);
-            envolvidos_texto += adicionarEnvolvido(2);
-            envolvidos_texto += adicionarEnvolvido(3);
-            envolvidos_texto += adicionarEnvolvido(4);
-
-            if(envolvidos_texto === "") {
-                envolvidos_texto = "Nenhum envolvido (Vítima, Proprietário, Conduzido ou Outros) foi adicionado.\n\n";
-            }
-
-            mensagem += envolvidos_texto;
-            
-            // Materiais e Providências
-            const material_apreendido = document.getElementById('input_46').value;
-            const relatorio = document.getElementById('input_47').value;
-            
-            mensagem += `✅ *MATERIAIS/OBJETOS APREENDIDOS E APRESENTADOS:*\n${material_apreendido}\n\n`;
-            mensagem += `✅ *PROVIDÊNCIAS ADOTADAS:*\n- \n\n`;
-            mensagem += `✅ *RELATÓRIO DA OCORRÊNCIA:*\n- ${relatorio}`;
-
-            const numero = "+5598985342874";
-            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
-            window.open(urlWhatsApp, '_blank');
+            });
         }
         
-        // --- Lógica do Modal de Confirmação ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const confirmModal = document.getElementById('confirm-modal');
-            const confirmYesBtn = document.getElementById('confirm-yes');
-            const confirmNoBtn = document.getElementById('confirm-no');
-            const aplicationForm = document.getElementById('252474593439064');
-            const resetButton = document.getElementById('input_reset_59');
+        pmSubstituidoNomeSelect.addEventListener('change', () => fillId(pmSubstituidoNomeSelect, pmSubstituidoIdentificacaoInput));
+        pmSubstitutoNomeSelect.addEventListener('change', () => fillId(pmSubstitutoNomeSelect, pmSubstitutoIdentificacaoInput));
 
-            if(resetButton) {
-                resetButton.addEventListener('click', function(event) {
-                    event.preventDefault(); // Impede o reset imediato
-                    confirmModal.classList.remove('hidden');
-                });
-            }
+        // --- LÓGICA GENÉRICA DO CALENDÁRIO ---
+        
+        // Objetos de estado para cada calendário
+        let serviceCalendarState = {
+            currentDate: new Date(), selectedStartDate: null, selectedEndDate: null,
+            containerId: 'calendar-container-service', startDateInputId: 'dataServicoPermutadoInicio',
+            endDateInputId: 'dataServicoPermutadoFim', warningId: 'dataServicoPermutadoWarning'
+        };
+        let paymentCalendarState = {
+            currentDate: new Date(), selectedStartDate: null, selectedEndDate: null,
+            containerId: 'calendar-container-payment', startDateInputId: 'dataPagamentoServicoInicio',
+            endDateInputId: 'dataPagamentoServicoFim', warningId: 'dataPagamentoWarning'
+        };
 
-            if(confirmYesBtn) {
-                confirmYesBtn.addEventListener('click', () => {
-                  aplicationForm.reset();
-                  confirmModal.classList.add('hidden');
-                });
-            }
-
-            if(confirmNoBtn) {
-                confirmNoBtn.addEventListener('click', () => {
-                  confirmModal.classList.add('hidden');
-                });
-            }
+        function renderCalendar(state) {
+            const container = document.getElementById(state.containerId);
+            const month = state.currentDate.getMonth();
+            const year = state.currentDate.getFullYear();
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             
-            // Conecta as outras funções aos botões
-            document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
+            let calendarHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <button class="prev-month p-2 rounded-full hover:bg-gray-100"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <h4 class="font-bold text-lg">${monthNames[month]} ${year}</h4>
+                    <button class="next-month p-2 rounded-full hover:bg-gray-100"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-500 mb-2">
+                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                </div>
+                <div class="calendar-days grid grid-cols-7 gap-1">`;
+
+            for (let i = 0; i < firstDay; i++) { calendarHTML += `<div></div>`; }
+
+            for (let i = 1; i <= lastDate; i++) {
+                const dayDate = new Date(year, month, i);
+                let classes = 'calendar-day cursor-pointer h-9 w-9 flex items-center justify-center rounded-full';
+                if (dayDate < today && dayDate.toDateString() !== today.toDateString()) { classes += ' day-disabled'; }
+                if (state.selectedStartDate && dayDate.getTime() === state.selectedStartDate.getTime()) { classes += ' day-selected'; } 
+                else if (state.selectedEndDate && dayDate.getTime() === state.selectedEndDate.getTime()) { classes += ' day-selected'; } 
+                else if (state.selectedStartDate && state.selectedEndDate && dayDate > state.selectedStartDate && dayDate < state.selectedEndDate) { classes += ' day-in-range'; }
+                calendarHTML += `<div class="${classes}" data-date="${dayDate.toISOString().split('T')[0]}">${i}</div>`;
+            }
+
+            calendarHTML += `</div>`;
+            container.innerHTML = calendarHTML;
+            lucide.createIcons();
+
+            container.querySelector('.prev-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(state); });
+            container.querySelector('.next-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(state); });
+            container.querySelector('.calendar-days').addEventListener('click', (e) => handleDayClick(e, state));
+        }
+
+        function handleDayClick(e, state) {
+            if (!e.target.dataset.date || e.target.classList.contains('day-disabled')) return;
+            const clickedDate = new Date(e.target.dataset.date + 'T00:00:00');
+
+            if (!state.selectedStartDate || (state.selectedStartDate && state.selectedEndDate)) {
+                state.selectedStartDate = clickedDate;
+                state.selectedEndDate = null;
+            } else {
+                state.selectedEndDate = clickedDate;
+                if (state.selectedEndDate < state.selectedStartDate) { [state.selectedStartDate, state.selectedEndDate] = [state.selectedEndDate, state.selectedStartDate]; }
+                const diffTime = Math.abs(state.selectedEndDate - state.selectedStartDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays > 2) {
+                    showCustomAlert('Intervalo Inválido', 'Você pode selecionar no máximo 3 dias consecutivos.');
+                    state.selectedStartDate = clickedDate;
+                    state.selectedEndDate = null;
+                }
+            }
+            const startDateValue = state.selectedStartDate ? state.selectedStartDate.toISOString().split('T')[0] : '';
+            const endDateValue = state.selectedEndDate ? state.selectedEndDate.toISOString().split('T')[0] : startDateValue;
+            
+            document.getElementById(state.startDateInputId).value = startDateValue;
+            document.getElementById(state.endDateInputId).value = endDateValue;
+            
+            validateDateSelection(state);
+            renderCalendar(state);
+        }
+
+        // --- LÓGICA DO PAGAMENTO CHECKBOX ---
+        const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
+        const paymentContainer = document.getElementById('payment-fields-container');
+        noPagamentoCheckbox.addEventListener('change', function() {
+            paymentContainer.classList.toggle('hidden', this.checked);
+            if (this.checked) {
+                paymentCalendarState.selectedStartDate = null;
+                paymentCalendarState.selectedEndDate = null;
+                document.getElementById(paymentCalendarState.startDateInputId).value = '';
+                document.getElementById(paymentCalendarState.endDateInputId).value = '';
+                renderCalendar(paymentCalendarState);
+                validateDateSelection(paymentCalendarState);
+            }
         });
 
+        // --- VALIDAÇÃO GERAL ---
+        function validateField(fieldId, warningId) {
+            const field = document.getElementById(fieldId);
+            const isValid = field.value.trim() !== '';
+            field.classList.toggle('input-error', !isValid);
+            document.getElementById(warningId).classList.toggle('hidden', isValid);
+            return isValid;
+        }
+
+        function validateDateSelection(state) {
+            const startDateInput = document.getElementById(state.startDateInputId);
+            const warning = document.getElementById(state.warningId);
+            const isValid = startDateInput.value.trim() !== '';
+            warning.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+        
+        const requiredFields = [
+            { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
+            { id: 'pmSubstituidoIdentificacao', warningId: 'pmSubstituidoIdentificacaoWarning' },
+            { id: 'pmSubstitutoNome', warningId: 'pmSubstitutoNomeWarning' },
+            { id: 'pmSubstitutoIdentificacao', warningId: 'pmSubstitutoIdentificacaoWarning' },
+        ];
+        requiredFields.forEach(field => {
+            document.getElementById(field.id).addEventListener('input', () => validateField(field.id, field.warningId));
+        });
+
+        function validateAllFields() {
+            let isValid = true;
+            requiredFields.forEach(field => { isValid = validateField(field.id, field.warningId) && isValid; });
+            isValid = validateDateSelection(serviceCalendarState) && isValid;
+            
+            if (!noPagamentoCheckbox.checked) {
+                isValid = validateDateSelection(paymentCalendarState) && isValid;
+            }
+            
+            if (!isValid) { showCustomAlert('Campos Incompletos', 'Por favor, preencha todos os campos obrigatórios.'); }
+            return isValid;
+        }
+        
+        // --- LÓGICA DE IMPRESSÃO ---
+        function formatarDataRange(startDateStr, endDateStr) {
+            if (!startDateStr || !endDateStr) return '';
+            const dates = [];
+            let currentDate = new Date(startDateStr + 'T00:00:00');
+            const finalDate = new Date(endDateStr + 'T00:00:00');
+            while (currentDate <= finalDate) {
+                dates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            if (dates.length === 0) return '';
+            if (dates.length === 1) {
+                const d = dates[0];
+                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            }
+
+            let result = '';
+            let currentMonth = dates[0].getMonth();
+            let currentYear = dates[0].getFullYear();
+            let daysInGroup = [];
+
+            for (let i = 0; i < dates.length; i++) {
+                const d = dates[i];
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    daysInGroup.push(String(d.getDate()).padStart(2, '0'));
+                } else {
+                    // Month changed, format the previous group
+                    let dayStr = daysInGroup.join(', ');
+                    result += `${dayStr}/${String(currentMonth + 1).padStart(2, '0')}, `;
+                    
+                    // Start new group
+                    currentMonth = d.getMonth();
+                    currentYear = d.getFullYear();
+                    daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                }
+            }
+
+            // Format the last group
+            let dayStr = daysInGroup.join(' - ');
+            result += `${dayStr}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+
+            return result;
+        }
+
+        function printForm() {
+            if (!validateAllFields()) return;
+            
+            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
+            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
+            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
+            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
+            const servicoPermutadoInicio = document.getElementById('dataServicoPermutadoInicio').value;
+            const servicoPermutadoFim = document.getElementById('dataServicoPermutadoFim').value;
+            const pagamentoInicio = document.getElementById('dataPagamentoServicoInicio').value;
+            const pagamentoFim = document.getElementById('dataPagamentoServicoFim').value;
+            const noPagamento = document.getElementById('noPagamentoCheckbox').checked;
+            const comandanteNome = document.getElementById('comandanteNome').value;
+
+            const localizacaoSelecionada = document.getElementById('localizacaoSelect').value;
+
+            let localizacaoSede = '&nbsp;';
+            let localizacaoTurilandia = '&nbsp;';
+            let localizacaoTuriacu = '&nbsp;';
+
+            if (localizacaoSelecionada === 'SEDE') {
+                localizacaoSede = 'X';
+            } else if (localizacaoSelecionada === 'TURILÂNDIA') {
+                localizacaoTurilandia = 'X';
+            } else if (localizacaoSelecionada === 'TURIAÇU') {
+                localizacaoTuriacu = 'X';
+            }
+            
+            const diasServico = servicoPermutadoInicio && servicoPermutadoFim ? Math.ceil((new Date(servicoPermutadoFim) - new Date(servicoPermutadoInicio)) / (1000 * 60 * 60 * 24)) + 1 : 0;
+            let tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
+            let tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
+            let tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+
+            const servicoPermutadoTexto = formatarDataRange(servicoPermutadoInicio, servicoPermutadoFim);
+            
+            let pagamentoHtml = '';
+            if (!noPagamento) {
+                const pagamentoTexto = formatarDataRange(pagamentoInicio, pagamentoFim);
+                pagamentoHtml = `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>`;
+            }
+            
+            const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
+
+            const printContent = `
+                <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Formulário de Permuta - Impressão</title>
+                <style>
+                    body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
+                    .container { width: 100%; max-width: 800px; margin: 0 auto; } .text-center { text-align: center; }
+                    .font-bold { font-weight: bold; } p { margin: 4px 0; } .header p { margin: 2px 0; }
+                    .text-sm { font-size: 11pt; } .text-xs { font-size: 9pt; } .text-base { font-size: 12pt; }
+                </style></head><body>
+                <div class="container">
+                    <div class="text-center" style="line-height: 1.15; margin: 0;">
+                        <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+                        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+                        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+                        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+                        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+                        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+                        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+                    </div>
+                    <div class="mt-4 mb-4" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                    </div>
+                    <div style="margin-bottom: 0.25rem;">
+                        <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
+                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                    </div>
+                    <div style="margin-bottom: 0.25rem; margin-top: 1.5rem;">
+                        <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
+                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                    </div>
+                    <div class="mb-2" style="margin-top: 1.5rem;">
+                        <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
+                        ${pagamentoHtml}
+                    </div>
+                    <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
+                        <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                    </div>
+                    <div class="text-center" style="margin-top: 2rem;">
+                        <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
+                        <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+                        <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandanteNome.toUpperCase()}</p>
+                        <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+                    </div>
+                </div></body></html>`;
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
+            } else {
+                showCustomAlert('Erro de Pop-up', 'Por favor, habilite pop-ups para imprimir.');
+            }
+        }
+        
+        function signWithGovBr() {
+            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
+        }
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populatePmSelects();
+            renderCalendar(serviceCalendarState);
+            renderCalendar(paymentCalendarState);
+            noPagamentoCheckbox.checked = false; // Inicia desmarcada por padrão
+            paymentContainer.classList.remove('hidden'); // Mostra o calendário de pagamento por padrão
+        });
     </script>
 </body>
 </html>
-
