@@ -6,22 +6,16 @@
     <title>Formulário de Boletim de Ocorrência</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- TODOS OS SCRIPTS E ESTILOS ORIGINAIS DA JOTFORM RESTAURADOS -->
+    <!-- Client-side PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Jotform scripts for legacy fields (date/time pickers) -->
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/prototype.forms.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/static/jotform.forms.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/maskedinput_5.0.9.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/jotStorage.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/autoFill.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-pdfimporter-patch.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-form-branding-footer.js" type="text/javascript" defer=""></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/smoothscroll.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/errorNavigation.js" type="text/javascript"></script>
-
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/stylebuilder/static/form-common.css?v=4794b7e" />
+    
     <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/themes/CSS/defaultV2.css?v=4794b7e" />
     <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/themes/CSS/548b1325700cc48d318b4567.css?v=3.3.65295&amp;themeRevisionID=64ff099762313412041c01ae" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_styles.css?3.3.65295" />
-    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_feature.css?3.3.65295" />
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -30,13 +24,14 @@
             font-family: 'Inter', sans-serif;
             background-color: #483D8B;
         }
-        .jotform-form {
+        .form-all {
             background-color: white !important;
         }
         [class*="branding-footer"] {
             display: none !important;
         }
-        .form-textarea{
+        /* Make textareas resizable vertically */
+        .form-textarea {
             resize: vertical;
         }
     </style>
@@ -81,11 +76,7 @@
             <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">FORMULÁRIO DE BOLETIM DE OCORRÊNCIA</h2>
         </header>
 
-        <form class="jotform-form" onsubmit="return typeof testSubmitFunction !== 'undefined' &amp;&amp; testSubmitFunction();" action="https://submit.jotform.com/submit/252474593439064" method="post" name="form_252474593439064" id="252474593439064" accept-charset="utf-8" autocomplete="on">
-            <input type="hidden" name="formID" value="252474593439064" />
-            <input type="hidden" id="JWTContainer" value="" />
-            <input type="hidden" id="cardinalOrderNumber" value="" />
-            
+        <div class="jotform-form" id="form-container">
             <div role="main" class="form-all">
                 <ul class="form-section page-section" role="presentation">
                     <li class="form-line" data-type="control_textbox" id="id_3"><label class="form-label form-label-top form-label-auto" id="label_3" for="input_3" aria-hidden="false"> BO N° </label>
@@ -94,6 +85,12 @@
                     <li class="form-line" data-type="control_checkbox" id="id_54"><label class="form-label form-label-top form-label-auto" id="label_54" aria-hidden="false"> AUTORIA </label>
                         <div id="cid_54" class="form-input-wide" data-layout="full">
                         <div class="form-single-column" role="group" aria-labelledby="label_54" data-component="checkbox"><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_54" type="checkbox" class="form-checkbox" id="input_54_0" name="q54_autoria[]" value="Conhecida" /><label id="label_input_54_0" for="input_54_0">Conhecida</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_54" type="checkbox" class="form-checkbox" id="input_54_1" name="q54_autoria[]" value="Desconhecida" /><label id="label_input_54_1" for="input_54_1">Desconhecida</label></span></div>
+                        </div>
+                    </li>
+                    <li class="form-line" data-type="control_textbox" id="id_titulo_ocorrencia">
+                        <label class="form-label form-label-top form-label-auto" for="input_titulo_ocorrencia"> TÍTULO DA OCORRÊNCIA </label>
+                        <div class="form-input-wide" data-layout="full"> 
+                            <input type="text" id="input_titulo_ocorrencia" name="q_titulo_ocorrencia" class="form-textbox" style="width:100%" /> 
                         </div>
                     </li>
                     <li class="form-line" data-type="control_time" id="id_55"><label class="form-label form-label-top form-label-auto" id="label_55" for="input_55_hourSelect" aria-hidden="false"> HORA DO FATO </label>
@@ -321,8 +318,24 @@
                     <li class="form-line" data-type="control_textarea" id="id_46"><label class="form-label form-label-top form-label-auto" id="label_46" for="input_46" aria-hidden="false"> ARMAS OBJETOS MATERIAIS APREENDIDOS/APRESENTADOS </label>
                         <div id="cid_46" class="form-input-wide" data-layout="full"> <textarea id="input_46" class="form-textarea" name="q46_armasObjetos" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_46"></textarea> </div>
                     </li>
-                    <li class="form-line" data-type="control_textarea" id="id_47"><label class="form-label form-label-top form-label-auto" id="label_47" for="input_47" aria-hidden="false"> HISTÓRICO (DESCRIÇÃO SUMÁRIA) </label>
-                        <div id="cid_47" class="form-input-wide" data-layout="full"> <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> </div>
+                    <li class="form-line" data-type="control_textarea" id="id_47">
+                        <label class="form-label form-label-top form-label-auto" id="label_47" for="input_47"> HISTÓRICO (DESCRIÇÃO SUMÁRIA) </label>
+                        <!-- Gemini Buttons and Spinner -->
+                        <div class="flex items-center gap-2 mb-2">
+                            <button id="correct-report-btn" type="button" class="px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2">
+                                ✨ Corrigir Gramática
+                            </button>
+                            <button id="summarize-report-btn" type="button" class="px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center gap-2">
+                                ✨ Resumir Ocorrência
+                            </button>
+                            <button id="undo-summary-btn" type="button" class="hidden px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center gap-2">
+                                Desfazer Resumo
+                            </button>
+                            <div id="ai-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+                        </div>
+                        <div id="cid_47" class="form-input-wide" data-layout="full"> 
+                            <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> 
+                        </div>
                     </li>
                     <li id="cid_68" class="form-input-wide" data-type="control_head">
                         <div class="form-header-group  header-default">
@@ -340,10 +353,22 @@
                     <li class="form-line" data-type="control_textbox" id="id_58"><label class="form-label form-label-top form-label-auto" id="label_58" for="input_58" aria-hidden="false"> NOME </label>
                         <div id="cid_58" class="form-input-wide" data-layout="half"> <input type="text" id="input_58" name="q58_nome58" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_58" value="" /> </div>
                     </li>
+                     <li class="form-line" data-type="control_dropdown" id="id_whatsapp_target">
+                        <label class="form-label form-label-top form-label-auto" id="label_whatsapp_target" for="whatsapp_select"> Enviar Release Para: </label>
+                        <div id="cid_whatsapp_target" class="form-input-wide" data-layout="full">
+                            <select class="form-dropdown" id="whatsapp_select" name="q_whatsapp_select" style="width:310px" data-component="dropdown">
+                                <option value="9885342874">Turiaçu - 9885342874</option>
+                                <option value="98981149456">Santa Helena - 98981149456</option>
+                                <option value="98985716622">Turilândia - 98985716622</option>
+                                <option value="custom">Inserir outro número</option>
+                            </select>
+                            <input type="text" id="whatsapp_custom_number" name="q_whatsapp_custom" class="form-textbox hidden mt-2" placeholder="Digite o número com DDD" style="width:310px" />
+                        </div>
+                    </li>
                     <li class="form-line" data-type="control_button" id="id_59">
                         <div id="cid_59" class="form-input-wide" data-layout="full">
-                             <div data-align="auto" class="form-buttons-wrapper form-buttons-auto jsTest-button-wrapperField" style="display: flex; justify-content: center; gap: 1rem;">
-                                <button id="input_59" type="submit" class="form-submit-button form-submit-button-reports-400 submit-button jf-form-buttons jsTest-submitField legacy-submit" data-component="button">
+                             <div data-align="auto" class="form-buttons-wrapper form-buttons-auto jsTest-button-wrapperField" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                                <button id="input_59" type="button" onclick="generatePDF()" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-700">
                                     Baixar PDF
                                 </button>
                                 <button id="enviar_whatsapp" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -352,392 +377,45 @@
                                 <button id="input_reset_59" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
                                     Limpar
                                 </button>
+                                <a href="home.html" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" style="text-decoration: none;">Início</a>
                             </div>
                         </div>
                     </li>
                 </ul>
             </div>
-            <div style="display:none">Should be Empty: <input type="hidden" name="website" value="" /></div>
-            <input type="hidden" class="simple_spc" id="simple_spc" name="simple_spc" value="252474593439064" />
-        </form>
-
-        <div class="text-center mt-6">
-            <a href="home.html" class="text-gray-500 hover:text-gray-700 transition-colors">← Voltar ao Início</a>
         </div>
     </div>
     
     <script type="text/javascript">
-      JotForm.newDefaultTheme=false;
-      JotForm.extendsNewTheme=true;
-      JotForm.singleProduct=false;
-      JotForm.newPaymentUIForNewCreatedForms=true;
       JotForm.init(function(){
-        if(window.JotForm&&JotForm.accessible)
-          $("input_3").setAttribute("tabindex",0);
         JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[67]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[67]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
         JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("67",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("67",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_5").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_8").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_9").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_11").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[71]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[71]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("71",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("71",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_13").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_14").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_15").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_16").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_17").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_18").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_20").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[73]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[73]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("73",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("73",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_22").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_23").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_24").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_25").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_26").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_27").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_29").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[74]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[74]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("74",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("74",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_31").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_32").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_33").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_34").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_35").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_36").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_38").setAttribute("tabindex",0);
-        JotForm.calendarMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewMonths)
-          JotForm.calenderViewMonths={};
-        JotForm.calenderViewMonths[75]=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        if(!JotForm.calenderViewDays)
-          JotForm.calenderViewDays={};
-        JotForm.calenderViewDays[75]=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarDays=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-        JotForm.calendarOther={
-          today:"Today"
-        };
-        var languageOptions=document.querySelectorAll("#langList li");
-        for(var langIndex=0;langIndex<languageOptions.length;langIndex++){
-          languageOptions[langIndex].on("click",function(e){
-            setTimeout(function(){
-              JotForm.setCalendar("75",false,{
-                days:{
-                  monday:true,
-                  tuesday:true,
-                  wednesday:true,
-                  thursday:true,
-                  friday:true,
-                  saturday:true,
-                  sunday:true
-                },
-                future:true,
-                past:true,
-                custom:false,
-                ranges:false,
-                start:"",
-                end:"",
-                countSelectedDaysOnly:false
-              })
-            },0)
-          })
-        }
-        JotForm.onTranslationsFetch(function(){
-          JotForm.setCalendar("75",false,{
-            days:{
-              monday:true,
-              tuesday:true,
-              wednesday:true,
-              thursday:true,
-              friday:true,
-              saturday:true,
-              sunday:true
-            },
-            future:true,
-            past:true,
-            custom:false,
-            ranges:false,
-            start:"",
-            end:"",
-            countSelectedDaysOnly:false
-          })
-        });
-        if(window.JotForm&&JotForm.accessible)
-          $("input_40").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_41").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_42").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_43").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_44").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_45").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_46").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_47").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_50").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_51").setAttribute("tabindex",0);
-        if(window.JotForm&&JotForm.accessible)
-          $("input_58").setAttribute("tabindex",0);
-        setTimeout(function(){
-          JotForm.autoFillInitialize({
-            bindChange:"on",
-            menu:"enable",
-            timeout:"4",
-            ttl:"86400"
-          })
-        },10)
+        JotForm.calendarOther={ today:"Today" };
+        JotForm.setCalendar("67", false, {days:{monday:true,tuesday:true,wednesday:true,thursday:true,friday:true,saturday:true,sunday:true},future:true,past:true,custom:false,ranges:false,start:"",end:""});
+        JotForm.setCalendar("71", false, {days:{monday:true,tuesday:true,wednesday:true,thursday:true,friday:true,saturday:true,sunday:true},future:true,past:true,custom:false,ranges:false,start:"",end:""});
+        JotForm.setCalendar("73", false, {days:{monday:true,tuesday:true,wednesday:true,thursday:true,friday:true,saturday:true,sunday:true},future:true,past:true,custom:false,ranges:false,start:"",end:""});
+        JotForm.setCalendar("74", false, {days:{monday:true,tuesday:true,wednesday:true,thursday:true,friday:true,saturday:true,sunday:true},future:true,past:true,custom:false,ranges:false,start:"",end:""});
+        JotForm.setCalendar("75", false, {days:{monday:true,tuesday:true,wednesday:true,thursday:true,friday:true,saturday:true,sunday:true},future:true,past:true,custom:false,ranges:false,start:"",end:""});
       });
     </script>
     <script type="text/javascript">
+        let originalHistoryText = '';
+
         function enviarViaWhatsApp() {
+            const select = document.getElementById('whatsapp_select');
+            const customInput = document.getElementById('whatsapp_custom_number');
+            let numero;
+
+            if (select.value === 'custom') {
+                numero = customInput.value.replace(/\D/g, ''); // Remove non-digits
+                if (!numero) {
+                    alert('Por favor, insira um número de WhatsApp válido.');
+                    return;
+                }
+            } else {
+                numero = select.value;
+            }
+
             // Cabeçalho estático
             let mensagem = `*PMMA*\n*CPI*\n*CPA/I-5*\n*10º BPM (PINHEIRO)*\n\n`;
             mensagem += `*- CMT GERAL: Cel.* Wallace\n`;
@@ -746,7 +424,8 @@
             mensagem += `*- CMT 10º BPM: Maj.* Wellington\n\n\n`;
             
             // Título
-            mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- \n\n`;
+            const tituloOcorrencia = document.getElementById('input_titulo_ocorrencia').value;
+            mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- ${tituloOcorrencia}\n\n`;
             
             // Dados Gerais
             const bo_n = document.getElementById('input_3').value;
@@ -789,7 +468,6 @@
                     tipoEnvolvimento = checkboxes[0].value;
                 }
                 
-                // Ignora se não for um dos tipos permitidos
                 if(!envolvidosPermitidos.includes(tipoEnvolvimento)) return "";
 
                 const residencia = document.getElementById(`input_${[13,22,31,40][num-1]}`).value;
@@ -801,7 +479,6 @@
                 const cpf = document.getElementById(`input_${[17,26,35,44][num-1]}`).value;
 
                 let label = tipoEnvolvimento;
-                // Mapeia "Conduzido" para "Suspeito" se necessário, ou mantém o original.
                 if(label === "Conduzido") label = "Suspeito";
 
                 return `*- ${label}:* ${nome}\n*- ⁠Endereço:* ${endereco}\n*- ⁠Contato:* ${contato}\n*- CPF:* ${cpf}\n\n`;
@@ -819,7 +496,6 @@
 
             mensagem += envolvidos_texto;
             
-            // Materiais e Providências
             const material_apreendido = document.getElementById('input_46').value;
             const relatorio = document.getElementById('input_47').value;
             
@@ -827,29 +503,145 @@
             mensagem += `✅ *PROVIDÊNCIAS ADOTADAS:*\n- \n\n`;
             mensagem += `✅ *RELATÓRIO DA OCORRÊNCIA:*\n- ${relatorio}`;
 
-            const numero = "+5598985342874";
-            const urlWhatsApp = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
+            const urlWhatsApp = `https://api.whatsapp.com/send?phone=+55${numero}&text=${encodeURIComponent(mensagem)}`;
             window.open(urlWhatsApp, '_blank');
         }
+
+        async function processTextWithAI(mode) {
+            const spinner = document.getElementById('ai-spinner');
+            const correctBtn = document.getElementById('correct-report-btn');
+            const summarizeBtn = document.getElementById('summarize-report-btn');
+            const undoBtn = document.getElementById('undo-summary-btn');
+            
+            spinner.classList.remove('hidden');
+            [correctBtn, summarizeBtn, undoBtn].forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+            if(mode !== 'summarize'){
+                 undoBtn.classList.add('hidden');
+            }
+
+            try {
+                const historyTextarea = document.getElementById('input_47');
+                const originalText = historyTextarea.value;
+                if (!originalText.trim()) {
+                    alert('O campo "Histórico" está vazio. Por favor, escreva o texto antes de usar a IA.');
+                    return;
+                }
+
+                let userQuery = '';
+                let systemPrompt = 'Você é um assistente de redação especializado em documentos oficiais.';
+
+                if (mode === 'correct') {
+                    originalHistoryText = ''; 
+                    systemPrompt += ' Sua tarefa é corrigir a gramática e ortografia de um texto policial, mantendo a formalidade, o sentido original e a estrutura. Responda apenas com o texto corrigido.';
+                    userQuery = `Corrija o seguinte texto para um boletim de ocorrência: "${originalText}"`;
+                } else if (mode === 'summarize') {
+                    if(!originalHistoryText) { // Only save if not already saved
+                        originalHistoryText = originalText; 
+                    }
+                    systemPrompt += ' Sua tarefa é resumir um texto policial de forma concisa. Responda apenas com o resumo.';
+                    userQuery = `Resuma o seguinte texto de um boletim de ocorrência em um parágrafo: "${originalText}"`;
+                }
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "texto_modificado": { "type": "STRING", "description": "O texto resultante da operação solicitada (correção ou resumo)." }
+                            },
+                            required: ["texto_modificado"]
+                        }
+                    }
+                };
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content?.parts?.[0]?.text) {
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(jsonText);
+                    historyTextarea.value = parsedJson.texto_modificado || originalText;
+                    if (mode === 'summarize') {
+                        undoBtn.classList.remove('hidden');
+                    }
+                } else {
+                    console.error('Resposta da API inválida ou vazia:', result);
+                    alert('Não foi possível processar o texto. A resposta da IA foi inválida.');
+                }
+
+            } catch (error) {
+                console.error('Erro ao chamar a API Gemini:', error);
+                alert('Ocorreu um erro ao tentar processar o texto. Por favor, verifique o console para mais detalhes.');
+            } finally {
+                spinner.classList.add('hidden');
+                [correctBtn, summarizeBtn].forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+                if(!undoBtn.classList.contains('hidden')){
+                    undoBtn.disabled = false;
+                    undoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // Exponential backoff function
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response;
+                    if (response.status >= 400 && response.status < 500) throw new Error(`Client-side error: ${response.status}`);
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+                }
+            }
+        }
         
-        // --- Lógica do Modal de Confirmação ---
+        // --- Lógica do Modal de Confirmação e Event Listeners ---
         document.addEventListener('DOMContentLoaded', function() {
             const confirmModal = document.getElementById('confirm-modal');
             const confirmYesBtn = document.getElementById('confirm-yes');
             const confirmNoBtn = document.getElementById('confirm-no');
-            const aplicationForm = document.getElementById('252474593439064');
+            const aplicationForm = document.getElementById('form-container');
             const resetButton = document.getElementById('input_reset_59');
+            const undoBtn = document.getElementById('undo-summary-btn');
 
             if(resetButton) {
                 resetButton.addEventListener('click', function(event) {
-                    event.preventDefault(); // Impede o reset imediato
+                    event.preventDefault(); 
                     confirmModal.classList.remove('hidden');
                 });
             }
 
             if(confirmYesBtn) {
                 confirmYesBtn.addEventListener('click', () => {
-                  aplicationForm.reset();
+                  aplicationForm.querySelector('ul').querySelectorAll('input, textarea').forEach(el => {
+                      if(el.type === 'checkbox' || el.type === 'radio'){
+                          el.checked = false;
+                      } else {
+                          el.value = '';
+                      }
+                  });
+                  undoBtn.classList.add('hidden');
+                  originalHistoryText = '';
                   confirmModal.classList.add('hidden');
                 });
             }
@@ -860,11 +652,30 @@
                 });
             }
             
-            // Conecta as outras funções aos botões
+            if (undoBtn) {
+                undoBtn.addEventListener('click', () => {
+                    const historyTextarea = document.getElementById('input_47');
+                    if (originalHistoryText) {
+                        historyTextarea.value = originalHistoryText;
+                    }
+                    undoBtn.classList.add('hidden');
+                });
+            }
+            
+            document.getElementById('whatsapp_select').addEventListener('change', function() {
+                const customInput = document.getElementById('whatsapp_custom_number');
+                if (this.value === 'custom') {
+                    customInput.classList.remove('hidden');
+                } else {
+                    customInput.classList.add('hidden');
+                }
+            });
+
             document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
+            document.getElementById('correct-report-btn').addEventListener('click', () => processTextWithAI('correct'));
+            document.getElementById('summarize-report-btn').addEventListener('click', () => processTextWithAI('summarize'));
         });
 
     </script>
 </body>
 </html>
-
