@@ -12,8 +12,7 @@
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/maskedinput_5.0.9.min.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/jotStorage.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/autoFill.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-pdfimporter-patch.js" type="text/javascript"></script>
-    <script src="https://cdn.jotfor.ms/s/umd/07122680960/for-form-branding-footer.js" type="text/javascript" defer=""></script>
+    <!-- REMOVIDO: Scripts que causavam erro de rede (for-pdfimporter-patch.js e for-form-branding-footer.js) -->
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/vendor/smoothscroll.min.js" type="text/javascript"></script>
     <script src="https://cdn.jotfor.ms/s/static/9bf0bf2ddf8/js/errorNavigation.js" type="text/javascript"></script>
 
@@ -81,7 +80,7 @@
             <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">FORMULÁRIO DE BOLETIM DE OCORRÊNCIA</h2>
         </header>
 
-        <form class="jotform-form" onsubmit="return typeof testSubmitFunction !== 'undefined' &amp;&amp; testSubmitFunction();" action="https://submit.jotform.com/submit/252474593439064" method="post" name="form_252474593439064" id="252474593439064" accept-charset="utf-8" autocomplete="on">
+        <form class="jotform-form" onsubmit="return typeof testSubmitFunction !== 'undefined' && testSubmitFunction();" action="https://submit.jotform.com/submit/252474593439064" method="post" name="form_252474593439064" id="252474593439064" accept-charset="utf-8" autocomplete="on">
             <input type="hidden" name="formID" value="252474593439064" />
             <input type="hidden" id="JWTContainer" value="" />
             <input type="hidden" id="cardinalOrderNumber" value="" />
@@ -253,54 +252,6 @@
                     <li class="form-line" data-type="control_textbox" id="id_34"><label class="form-label form-label-top form-label-auto" id="label_34" for="input_34" aria-hidden="false"> N° DA CASA </label>
                         <div id="cid_34" class="form-input-wide" data-layout="half"> <input type="text" id="input_34" name="q34_n34" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_34" value="" /> </div>
                     </li>
-                    <li class="form-line" data-type="control_textbox" id="id_92"><label class="form-label form-label-top form-label-auto" id="label_92" for="input_92" aria-hidden="false"> Contato (Opcional) </label>
-                        <div id="cid_92" class="form-input-wide" data-layout="half"> <input type="text" id="input_92" name="q92_contato3" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_92" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_88"><label class="form-label form-label-top form-label-auto" id="label_88" aria-hidden="false"> TIPO DE DOCUMENTO </label>
-                        <div id="cid_88" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="3" role="group" aria-labelledby="label_88" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_0" name="q88_tipoDe88[]" value="CPF" /><label id="label_input_88_0" for="input_88_0">CPF</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_1" name="q88_tipoDe88[]" value="CI" /><label id="label_input_88_1" for="input_88_1">CI</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_88" type="checkbox" class="form-checkbox" id="input_88_2" name="q88_tipoDe88[]" value="CNH" /><label id="label_input_88_2" for="input_88_2">CNH</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_35"><label class="form-label form-label-top form-label-auto" id="label_35" for="input_35" aria-hidden="false"> N° DO DOCUMENTO </label>
-                        <div id="cid_35" class="form-input-wide" data-layout="half"> <input type="text" id="input_35" name="q35_n35" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_35" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_36"><label class="form-label form-label-top form-label-auto" id="label_36" for="input_36" aria-hidden="false"> PROFISSÃO </label>
-                        <div id="cid_36" class="form-input-wide" data-layout="half"> <input type="text" id="input_36" name="q36_profissao36" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_36" value="" /> </div>
-                    </li>
-                    <li id="cid_37" class="form-input-wide" data-type="control_head">
-                        <div class="form-header-group  header-default">
-                        <div class="header-text httal htvam">
-                            <h2 id="header_37" class="form-header" data-component="header">ENVOLVIDO 4:</h2>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_checkbox" id="id_85"><label class="form-label form-label-top form-label-auto" id="label_85" aria-hidden="false"> ENVOLVIMENTO </label>
-                        <div id="cid_85" class="form-input-wide" data-layout="full">
-                        <div class="form-multiple-column" data-columncount="2" role="group" aria-labelledby="label_85" data-component="checkbox"><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_0" name="q85_envolvimento85[]" data-maxselection="1" value="Condutor" /><label id="label_input_85_0" for="input_85_0">Condutor</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_1" name="q85_envolvimento85[]" data-maxselection="1" value="Testemunha" /><label id="label_input_85_1" for="input_85_1">Testemunha</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_2" name="q85_envolvimento85[]" data-maxselection="1" value="Vítima" /><label id="label_input_85_2" for="input_85_2">Vítima</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_3" name="q85_envolvimento85[]" data-maxselection="1" value="Conduzido" /><label id="label_input_85_3" for="input_85_3">Conduzido</label></span><span class="form-checkbox-item" style="clear:left"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_4" name="q85_envolvimento85[]" data-maxselection="1" value="Proprietário" /><label id="label_input_85_4" for="input_85_4">Proprietário</label></span><span class="form-checkbox-item"><span class="dragger-item"></span><input aria-describedby="label_85" type="checkbox" class="form-checkbox validate[maxselection]" id="input_85_5" name="q85_envolvimento85[]" data-maxselection="1" value="Outros" /><label id="label_input_85_5" for="input_85_5">Outros</label></span></div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_38"><label class="form-label form-label-top form-label-auto" id="label_38" for="input_38" aria-hidden="false"> NOME </label>
-                        <div id="cid_38" class="form-input-wide" data-layout="half"> <input type="text" id="input_38" name="q38_nome38" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_38" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_datetime" id="id_75"><label class="form-label form-label-top form-label-auto" id="label_75" for="lite_mode_75" aria-hidden="false"> DATA DE NASCIMENTO </label>
-                        <div id="cid_75" class="form-input-wide" data-layout="half">
-                        <div data-wrapper-react="true">
-                            <div style="display:none"><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="day_75" name="q75_date75[day]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_75 sublabel_75_day" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="day_75" id="sublabel_75_day" style="min-height:13px">Day</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="month_75" name="q75_date75[month]" type="tel" size="2" data-maxlength="2" data-age="" maxlength="2" autocomplete="off" aria-labelledby="label_75 sublabel_75_month" value="" /><span class="date-separate" aria-hidden="true"> -</span><label class="form-sub-label" for="month_75" id="sublabel_75_month" style="min-height:13px">Month</label></span><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate]" id="year_75" name="q75_date75[year]" type="tel" size="4" data-maxlength="4" data-age="" maxlength="4" autocomplete="off" aria-labelledby="label_75 sublabel_75_year" value="" /><label class="form-sub-label" for="year_75" id="sublabel_75_year" style="min-height:13px">Year</label></span></div><span class="form-sub-label-container" style="vertical-align:top"><input class="form-textbox validate[limitDate, validateLiteDate]" id="lite_mode_75" type="text" size="12" data-maxlength="12" maxlength="12" data-age="" data-format="ddmmyyyy" data-seperator="-" placeholder="DD-MM-YYYY" data-placeholder="DD-MM-YYYY" autocomplete="off" aria-labelledby="label_75 sublabel_75_litemode" value="" name="q75_date75[litemode]"/><button type="button" class=" newDefaultTheme-dateIcon focusable icon-liteMode" id="input_75_pick" data-component="datetime" aria-hidden="true" data-allow-time="No" data-version="v2"></button><label class="form-sub-label" for="lite_mode_75" id="sublabel_75_litemode" style="min-height:13px">Date</label></span>
-                        </div>
-                        </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_40"><label class="form-label form-label-top form-label-auto" id="label_40" for="input_40" aria-hidden="false"> RESIDÊNCIA </label>
-                        <div id="cid_40" class="form-input-wide" data-layout="half"> <input type="text" id="input_40" name="q40_residencia40" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_40" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_41"><label class="form-label form-label-top form-label-auto" id="label_41" for="input_41" aria-hidden="false"> CIDADE </label>
-                        <div id="cid_41" class="form-input-wide" data-layout="half"> <input type="text" id="input_41" name="q41_cidade41" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_41" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_42"><label class="form-label form-label-top form-label-auto" id="label_42" for="input_42" aria-hidden="false"> BAIRRO </label>
-                        <div id="cid_42" class="form-input-wide" data-layout="half"> <input type="text" id="input_42" name="q42_bairro42" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_42" value="" /> </div>
-                    </li>
-                    <li class="form-line" data-type="control_textbox" id="id_43"><label class="form-label form-label-top form-label-auto" id="label_43" for="input_43" aria-hidden="false"> N° DA CASA </label>
-                        <div id="cid_43" class="form-input-wide" data-layout="half"> <input type="text" id="input_43" name="q43_n43" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_43" value="" /> </div>
-                    </li>
                      <li class="form-line" data-type="control_textbox" id="id_93"><label class="form-label form-label-top form-label-auto" id="label_93" for="input_93" aria-hidden="false"> Contato (Opcional) </label>
                         <div id="cid_93" class="form-input-wide" data-layout="half"> <input type="text" id="input_93" name="q93_contato4" data-type="input-textbox" class="form-textbox" data-defaultvalue="" style="width:310px" size="310" data-component="textbox" aria-labelledby="label_93" value="" /> </div>
                     </li>
@@ -327,19 +278,9 @@
                     </li>
                     <li class="form-line" data-type="control_textarea" id="id_47">
                         <label class="form-label form-label-top form-label-auto" id="label_47" for="input_47"> HISTÓRICO (DESCRIÇÃO SUMÁRIA) </label>
-                        <!-- Gemini Buttons and Spinner -->
-                        <div class="flex items-center gap-2 mb-2">
-                            <button id="correct-report-btn" type="button" class="px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2">
-                                ✨ Corrigir Gramática
-                            </button>
-                            <button id="summarize-report-btn" type="button" class="px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center gap-2">
-                                ✨ Resumir Ocorrência
-                            </button>
-                            <button id="undo-summary-btn" type="button" class="hidden px-4 py-2 text-sm rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center gap-2">
-                                Desfazer Resumo
-                            </button>
-                            <div id="ai-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
-                        </div>
+                        
+                        <!-- REMOVIDO: Botões de IA (Corrigir e Resumir) conforme solicitado -->
+                        
                         <div id="cid_47" class="form-input-wide" data-layout="full"> 
                             <textarea id="input_47" class="form-textarea" name="q47_historicodescricao" style="width:100%;height:163px" data-component="textarea" aria-labelledby="label_47"></textarea> 
                         </div>
@@ -375,11 +316,11 @@
                     <li class="form-line" data-type="control_button" id="id_59">
                         <div id="cid_59" class="form-input-wide" data-layout="full">
                              <div data-align="auto" class="form-buttons-wrapper form-buttons-auto jsTest-button-wrapperField" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                                <button id="input_59" type="submit" class="form-submit-button form-submit-button-reports-400 submit-button jf-form-buttons jsTest-submitField legacy-submit" data-component="button">
-                                    Baixar PDF
-                                </button>
                                 <button id="enviar_whatsapp" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     Enviar Release - WhatsApp
+                                </button>
+                                <button id="input_59" type="submit" class="form-submit-button form-submit-button-reports-400 submit-button jf-form-buttons jsTest-submitField legacy-submit" data-component="button">
+                                    Baixar PDF
                                 </button>
                                 <button id="input_reset_59" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
                                     Limpar
@@ -390,7 +331,7 @@
                     </li>
                 </ul>
             </div>
-        </div>
+        </form>
     </div>
     
     <script type="text/javascript">
@@ -406,8 +347,7 @@
       });
     </script>
     <script type="text/javascript">
-        let originalHistoryText = '';
-
+        
         function enviarViaWhatsApp() {
             const select = document.getElementById('whatsapp_select');
             const customInput = document.getElementById('whatsapp_custom_number');
@@ -516,114 +456,6 @@
             window.open(urlWhatsApp, '_blank');
         }
 
-        async function processTextWithAI(mode) {
-            const spinner = document.getElementById('ai-spinner');
-            const correctBtn = document.getElementById('correct-report-btn');
-            const summarizeBtn = document.getElementById('summarize-report-btn');
-            const undoBtn = document.getElementById('undo-summary-btn');
-            
-            spinner.classList.remove('hidden');
-            [correctBtn, summarizeBtn, undoBtn].forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            });
-            if(mode !== 'summarize'){
-                 undoBtn.classList.add('hidden');
-            }
-
-            try {
-                const historyTextarea = document.getElementById('input_47');
-                const originalText = historyTextarea.value;
-                if (!originalText.trim()) {
-                    alert('O campo "Histórico" está vazio. Por favor, escreva o texto antes de usar a IA.');
-                    return;
-                }
-
-                let userQuery = '';
-                let systemPrompt = 'Você é um assistente de redação especializado em documentos oficiais.';
-
-                if (mode === 'correct') {
-                    originalHistoryText = ''; 
-                    systemPrompt += ' Sua tarefa é corrigir a gramática e ortografia de um texto policial, mantendo a formalidade, o sentido original e a estrutura. Responda apenas com o texto corrigido.';
-                    userQuery = `Corrija o seguinte texto para um boletim de ocorrência: "${originalText}"`;
-                } else if (mode === 'summarize') {
-                    if(!originalHistoryText) { // Only save if not already saved
-                        originalHistoryText = originalText; 
-                    }
-                    systemPrompt += ' Sua tarefa é resumir um texto policial de forma concisa. Responda apenas com o resumo.';
-                    userQuery = `Resuma o seguinte texto de um boletim de ocorrência em um parágrafo: "${originalText}"`;
-                }
-
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "texto_modificado": { "type": "STRING", "description": "O texto resultante da operação solicitada (correção ou resumo)." }
-                            },
-                            required: ["texto_modificado"]
-                        }
-                    }
-                };
-
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                const response = await fetchWithRetry(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates[0].content?.parts?.[0]?.text) {
-                    const jsonText = result.candidates[0].content.parts[0].text;
-                    const parsedJson = JSON.parse(jsonText);
-                    historyTextarea.value = parsedJson.texto_modificado || originalText;
-                    if (mode === 'summarize') {
-                        undoBtn.classList.remove('hidden');
-                    }
-                } else {
-                    console.error('Resposta da API inválida ou vazia:', result);
-                    alert('Não foi possível processar o texto. A resposta da IA foi inválida.');
-                }
-
-            } catch (error) {
-                console.error('Erro ao chamar a API Gemini:', error);
-                alert('Ocorreu um erro ao tentar processar o texto. Por favor, verifique o console para mais detalhes.');
-            } finally {
-                spinner.classList.add('hidden');
-                [correctBtn, summarizeBtn].forEach(btn => {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                });
-                if(!undoBtn.classList.contains('hidden')){
-                    undoBtn.disabled = false;
-                    undoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        }
-
-        // Exponential backoff function
-        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return response;
-                    if (response.status >= 400 && response.status < 500) throw new Error(`Client-side error: ${response.status}`);
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
-                }
-            }
-        }
-        
         // --- Lógica do Modal de Confirmação e Event Listeners ---
         document.addEventListener('DOMContentLoaded', function() {
             const confirmModal = document.getElementById('confirm-modal');
@@ -631,7 +463,6 @@
             const confirmNoBtn = document.getElementById('confirm-no');
             const aplicationForm = document.getElementById('252474593439064');
             const resetButton = document.getElementById('input_reset_59');
-            const undoBtn = document.getElementById('undo-summary-btn');
 
             if(resetButton) {
                 resetButton.addEventListener('click', function(event) {
@@ -643,8 +474,6 @@
             if(confirmYesBtn) {
                 confirmYesBtn.addEventListener('click', () => {
                   aplicationForm.reset();
-                  undoBtn.classList.add('hidden');
-                  originalHistoryText = '';
                   confirmModal.classList.add('hidden');
                 });
             }
@@ -652,16 +481,6 @@
             if(confirmNoBtn) {
                 confirmNoBtn.addEventListener('click', () => {
                   confirmModal.classList.add('hidden');
-                });
-            }
-            
-            if (undoBtn) {
-                undoBtn.addEventListener('click', () => {
-                    const historyTextarea = document.getElementById('input_47');
-                    if (originalHistoryText) {
-                        historyTextarea.value = originalHistoryText;
-                    }
-                    undoBtn.classList.add('hidden');
                 });
             }
             
@@ -675,8 +494,6 @@
             });
 
             document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
-            document.getElementById('correct-report-btn').addEventListener('click', () => processTextWithAI('correct'));
-            document.getElementById('summarize-report-btn').addEventListener('click', () => processTextWithAI('summarize'));
         });
 
     </script>
