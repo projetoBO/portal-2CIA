@@ -316,7 +316,7 @@
                     <li class="form-line" data-type="control_button" id="id_59">
                         <div id="cid_59" class="form-input-wide" data-layout="full">
                              <div data-align="auto" class="form-buttons-wrapper form-buttons-auto jsTest-button-wrapperField" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                                <button id="enviar_whatsapp" type="button" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                <button id="enviar_whatsapp" type="button" onclick="enviarViaWhatsApp()" class="px-5 py-2.5 rounded-md text-white font-semibold shadow-md transition-transform transform hover:scale-105 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     Enviar Release - WhatsApp
                                 </button>
                                 <button id="input_59" type="submit" class="form-submit-button form-submit-button-reports-400 submit-button jf-form-buttons jsTest-submitField legacy-submit" data-component="button">
@@ -348,112 +348,139 @@
     </script>
     <script type="text/javascript">
         
+        // Helper function to safely get value from element
+        function getSafeValue(id) {
+            const el = document.getElementById(id);
+            if (el && el.value) {
+                return el.value.trim();
+            }
+            return "";
+        }
+
         function enviarViaWhatsApp() {
-            const select = document.getElementById('whatsapp_select');
-            const customInput = document.getElementById('whatsapp_custom_number');
-            let numero;
+            try {
+                console.log("Iniciando envio via WhatsApp...");
+                const select = document.getElementById('whatsapp_select');
+                const customInput = document.getElementById('whatsapp_custom_number');
+                let numero;
 
-            if (select.value === 'custom') {
-                numero = customInput.value.replace(/\D/g, ''); // Remove non-digits
-                if (!numero) {
-                    alert('Por favor, insira um número de WhatsApp válido.');
-                    return;
+                if (select.value === 'custom') {
+                    numero = customInput.value.replace(/\D/g, ''); // Remove non-digits
+                    if (!numero) {
+                        alert('Por favor, insira um número de WhatsApp válido.');
+                        return;
+                    }
+                } else {
+                    numero = select.value;
                 }
-            } else {
-                numero = select.value;
-            }
 
-            // Cabeçalho estático
-            let mensagem = `*PMMA*\n*CPI*\n*CPA/I-5*\n*10º BPM (PINHEIRO)*\n\n`;
-            mensagem += `*- CMT GERAL: Cel.* Wallace\n`;
-            mensagem += `*- CMT CPI: Cel.* Magalhães\n`;
-            mensagem += `*- CMT CPA/I-5: Ten.* Cel. Fábio\n`;
-            mensagem += `*- CMT 10º BPM: Maj.* Wellington\n\n\n`;
-            
-            // Título
-            const tituloOcorrencia = document.getElementById('input_titulo_ocorrencia').value;
-            mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- ${tituloOcorrencia}\n\n`;
-            
-            // Dados Gerais
-            const bo_n = document.getElementById('input_3').value;
-            const data_ocorrencia = document.getElementById('lite_mode_67').value;
-            const hora = document.getElementById('input_55_hourSelect').value;
-            const minuto = document.getElementById('input_55_minuteSelect').value;
-            const hora_fato = (hora && minuto) ? `${hora}:${minuto}` : '';
-
-            mensagem += `✅ *DADOS GERAIS DA OCORRÊNCIA:*\n\n`;
-            mensagem += `*- № do BO:* ${bo_n}\n`;
-            mensagem += `*- Data:* ${data_ocorrencia}\n`;
-            mensagem += `*- ⁠Hora:* ${hora_fato}\n`;
-            const local = document.getElementById('input_5').value;
-            const bairro = document.getElementById('input_8').value;
-            mensagem += `*- Local:* ${local}, ${bairro}\n`;
-            mensagem += `*- ⁠Município:* Turiaçu-MA\n`;
-            mensagem += `*- ⁠Coord. Latitude:*\n`;
-            mensagem += `*- ⁠Coord. Longitude:*\n\n`;
-            
-            // Dados da Guarnição
-            const relator_nome = document.getElementById('input_58').value;
-            const relator_posto = document.getElementById('input_50').value;
-            
-            mensagem += `✅ *DADOS DA GUARNIÇÃO:*\n\n`;
-            mensagem += `*- Município da Viatura:* Turiaçu-MA\n`;
-            mensagem += `*- ⁠Cmt:* ${relator_posto} ${relator_nome}\n`;
-            mensagem += `*- ⁠Membro:*\n`;
-            mensagem += `*- ⁠Membro:*\n\n`;
-            
-            // Dados dos Envolvidos
-            mensagem += `✅ *DADOS DOS ENVOLVIDOS:*\n\n`;
-            
-            const envolvidosPermitidos = ["Vítima", "Proprietário", "Conduzido", "Outros"];
-
-            function adicionarEnvolvido(num) {
-                const nome = document.getElementById(`input_${[11,20,29,38][num-1]}`).value;
-                if (!nome) return ""; 
-
-                let tipoEnvolvimento = "";
-                const checkboxes = document.querySelectorAll(`input[name="${['q81_typeA[]','q83_envolvimento83[]','q84_envolvimento[]','q85_envolvimento85[]'][num-1]}"]:checked`);
-                if (checkboxes.length > 0) {
-                    tipoEnvolvimento = checkboxes[0].value;
-                }
+                // Cabeçalho estático
+                let mensagem = `*PMMA*\n*CPI*\n*CPA/I-5*\n*10º BPM (PINHEIRO)*\n\n`;
+                mensagem += `*- CMT GERAL: Cel.* Wallace\n`;
+                mensagem += `*- CMT CPI: Cel.* Magalhães\n`;
+                mensagem += `*- CMT CPA/I-5: Ten.* Cel. Fábio\n`;
+                mensagem += `*- CMT 10º BPM: Maj.* Wellington\n\n\n`;
                 
-                if(!envolvidosPermitidos.includes(tipoEnvolvimento)) return "";
+                // Título
+                const tituloOcorrencia = getSafeValue('input_titulo_ocorrencia');
+                mensagem += `🚨 *TÍTULO DA OCORRÊNCIA:*\n- ${tituloOcorrencia}\n\n`;
+                
+                // Dados Gerais
+                const bo_n = getSafeValue('input_3');
+                const data_ocorrencia = getSafeValue('lite_mode_67');
+                const hora = getSafeValue('input_55_hourSelect');
+                const minuto = getSafeValue('input_55_minuteSelect');
+                const hora_fato = (hora && minuto) ? `${hora}:${minuto}` : '';
 
-                const residencia = document.getElementById(`input_${[13,22,31,40][num-1]}`).value;
-                const n_casa = document.getElementById(`input_${[16,25,34,43][num-1]}`).value;
-                const bairro_env = document.getElementById(`input_${[15,24,33,42][num-1]}`).value;
-                const cidade_env = document.getElementById(`input_${[14,23,32,41][num-1]}`).value;
-                const endereco = `${residencia}, N° ${n_casa}, ${bairro_env}, ${cidade_env}`;
-                const contato = document.getElementById(`input_${[90,91,92,93][num-1]}`).value;
-                const cpf = document.getElementById(`input_${[17,26,35,44][num-1]}`).value;
+                mensagem += `✅ *DADOS GERAIS DA OCORRÊNCIA:*\n\n`;
+                mensagem += `*- № do BO:* ${bo_n}\n`;
+                mensagem += `*- Data:* ${data_ocorrencia}\n`;
+                mensagem += `*- ⁠Hora:* ${hora_fato}\n`;
+                const local = getSafeValue('input_5');
+                const bairro = getSafeValue('input_8');
+                mensagem += `*- Local:* ${local}, ${bairro}\n`;
+                mensagem += `*- ⁠Município:* Turiaçu-MA\n`;
+                mensagem += `*- ⁠Coord. Latitude:*\n`;
+                mensagem += `*- ⁠Coord. Longitude:*\n\n`;
+                
+                // Dados da Guarnição
+                const relator_nome = getSafeValue('input_58');
+                const relator_posto = getSafeValue('input_50');
+                
+                mensagem += `✅ *DADOS DA GUARNIÇÃO:*\n\n`;
+                mensagem += `*- Município da Viatura:* Turiaçu-MA\n`;
+                mensagem += `*- ⁠Cmt:* ${relator_posto} ${relator_nome}\n`;
+                mensagem += `*- ⁠Membro:*\n`;
+                mensagem += `*- ⁠Membro:*\n\n`;
+                
+                // Dados dos Envolvidos
+                mensagem += `✅ *DADOS DOS ENVOLVIDOS:*\n\n`;
+                
+                const envolvidosPermitidos = ["Vítima", "Proprietário", "Conduzido", "Outros"];
 
-                let label = tipoEnvolvimento;
-                if(label === "Conduzido") label = "Suspeito";
+                function adicionarEnvolvido(num) {
+                    const idNome = [11,20,29,38][num-1];
+                    const nome = getSafeValue(`input_${idNome}`);
+                    
+                    if (!nome) return ""; 
 
-                return `*- ${label}:* ${nome}\n*- ⁠Endereço:* ${endereco}\n*- ⁠Contato:* ${contato}\n*- CPF:* ${cpf}\n\n`;
+                    let tipoEnvolvimento = "";
+                    const nomeCheckbox = ['q81_typeA[]','q83_envolvimento83[]','q84_envolvimento[]','q85_envolvimento85[]'][num-1];
+                    const checkboxes = document.querySelectorAll(`input[name="${nomeCheckbox}"]:checked`);
+                    
+                    if (checkboxes.length > 0) {
+                        tipoEnvolvimento = checkboxes[0].value;
+                    }
+                    
+                    if(!envolvidosPermitidos.includes(tipoEnvolvimento)) return "";
+
+                    const idResidencia = [13,22,31,40][num-1];
+                    const idCasa = [16,25,34,43][num-1];
+                    const idBairro = [15,24,33,42][num-1];
+                    const idCidade = [14,23,32,41][num-1];
+                    const idContato = [90,91,92,93][num-1];
+                    const idCPF = [17,26,35,44][num-1];
+
+                    const residencia = getSafeValue(`input_${idResidencia}`);
+                    const n_casa = getSafeValue(`input_${idCasa}`);
+                    const bairro_env = getSafeValue(`input_${idBairro}`);
+                    const cidade_env = getSafeValue(`input_${idCidade}`);
+                    
+                    const endereco = `${residencia}, N° ${n_casa}, ${bairro_env}, ${cidade_env}`;
+                    const contato = getSafeValue(`input_${idContato}`);
+                    const cpf = getSafeValue(`input_${idCPF}`);
+
+                    let label = tipoEnvolvimento;
+                    if(label === "Conduzido") label = "Suspeito";
+
+                    return `*- ${label}:* ${nome}\n*- ⁠Endereço:* ${endereco}\n*- ⁠Contato:* ${contato}\n*- CPF:* ${cpf}\n\n`;
+                }
+
+                let envolvidos_texto = "";
+                envolvidos_texto += adicionarEnvolvido(1);
+                envolvidos_texto += adicionarEnvolvido(2);
+                envolvidos_texto += adicionarEnvolvido(3);
+                envolvidos_texto += adicionarEnvolvido(4);
+
+                if(envolvidos_texto === "") {
+                    envolvidos_texto = "Nenhum envolvido (Vítima, Proprietário, Conduzido ou Outros) foi adicionado.\n\n";
+                }
+
+                mensagem += envolvidos_texto;
+                
+                const material_apreendido = getSafeValue('input_46');
+                const relatorio = getSafeValue('input_47');
+                
+                mensagem += `✅ *MATERIAIS/OBJETOS APREENDIDOS E APRESENTADOS:*\n${material_apreendido}\n\n`;
+                mensagem += `✅ *PROVIDÊNCIAS ADOTADAS:*\n- \n\n`;
+                mensagem += `✅ *RELATÓRIO DA OCORRÊNCIA:*\n- ${relatorio}`;
+
+                const urlWhatsApp = `https://api.whatsapp.com/send?phone=+55${numero}&text=${encodeURIComponent(mensagem)}`;
+                window.open(urlWhatsApp, '_blank');
+            } catch (error) {
+                console.error("Erro ao enviar WhatsApp:", error);
+                alert("Ocorreu um erro ao processar o envio: " + error.message);
             }
-
-            let envolvidos_texto = "";
-            envolvidos_texto += adicionarEnvolvido(1);
-            envolvidos_texto += adicionarEnvolvido(2);
-            envolvidos_texto += adicionarEnvolvido(3);
-            envolvidos_texto += adicionarEnvolvido(4);
-
-            if(envolvidos_texto === "") {
-                envolvidos_texto = "Nenhum envolvido (Vítima, Proprietário, Conduzido ou Outros) foi adicionado.\n\n";
-            }
-
-            mensagem += envolvidos_texto;
-            
-            const material_apreendido = document.getElementById('input_46').value;
-            const relatorio = document.getElementById('input_47').value;
-            
-            mensagem += `✅ *MATERIAIS/OBJETOS APREENDIDOS E APRESENTADOS:*\n${material_apreendido}\n\n`;
-            mensagem += `✅ *PROVIDÊNCIAS ADOTADAS:*\n- \n\n`;
-            mensagem += `✅ *RELATÓRIO DA OCORRÊNCIA:*\n- ${relatorio}`;
-
-            const urlWhatsApp = `https://api.whatsapp.com/send?phone=+55${numero}&text=${encodeURIComponent(mensagem)}`;
-            window.open(urlWhatsApp, '_blank');
         }
 
         // --- Lógica do Modal de Confirmação e Event Listeners ---
@@ -493,7 +520,12 @@
                 }
             });
 
-            document.getElementById('enviar_whatsapp').addEventListener('click', enviarViaWhatsApp);
+            // Fallback para adicionar o listener caso o onclick não funcione por algum motivo
+            // Mas mantivemos onclick no HTML como principal
+            const btnWhatsapp = document.getElementById('enviar_whatsapp');
+            if(btnWhatsapp) {
+                 btnWhatsapp.addEventListener('click', enviarViaWhatsApp);
+            }
         });
 
     </script>
