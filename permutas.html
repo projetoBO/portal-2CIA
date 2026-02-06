@@ -95,7 +95,7 @@ export default function App() {
     return () => unsubscribe();
   }, [user]);
 
-  // --- HELPERS DE FORMATAÇÃO (ORIGINAIS) ---
+  // --- HELPERS DE FORMATAÇÃO ---
   const formatarDataRange = (startDate, endDate) => {
     if (!startDate) return '';
     const start = new Date(startDate);
@@ -115,25 +115,23 @@ export default function App() {
 
     let result = '';
     let currentMonth = dates[0].getMonth();
-    let currentYear = dates[0].getFullYear();
     let daysInGroup = [];
 
     for (let i = 0; i < dates.length; i++) {
       const d = dates[i];
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      if (d.getMonth() === currentMonth) {
         daysInGroup.push(String(d.getDate()).padStart(2, '0'));
       } else {
         result += `${daysInGroup.join(', ')}/${String(currentMonth + 1).padStart(2, '0')}, `;
         currentMonth = d.getMonth();
-        currentYear = d.getFullYear();
         daysInGroup = [String(d.getDate()).padStart(2, '0')];
       }
     }
-    result += `${daysInGroup.join(' - ')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+    result += `${daysInGroup.join(' - ')}/${String(currentMonth + 1).padStart(2, '0')}/${dates[0].getFullYear()}`;
     return result;
   };
 
-  // --- LÓGICA DE IMPRESSÃO (EXATAMENTE O MODELO ORIGINAL) ---
+  // --- LÓGICA DE IMPRESSÃO ---
   const handlePrint = () => {
     if (!pmSubstituido.nome || !pmSubstituto.nome || !serviceDates.start) {
       setAlert({ title: "Campos Incompletos", message: "Por favor, preencha todos os campos obrigatórios." });
@@ -248,10 +246,10 @@ export default function App() {
             }
             setState({ ...state, start: newStart, end: newEnd });
           }}
-          className={`h-9 w-9 flex items-center justify-center rounded-full cursor-pointer transition-all text-sm
+          className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-full cursor-pointer transition-all text-xs sm:text-sm
             ${isPast ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-blue-100'}
             ${isSelected ? 'bg-blue-600 text-white font-bold' : ''}
-            ${isInRange ? 'bg-blue-200 text-blue-800' : ''}
+            ${isInRange ? 'bg-blue-100 text-blue-800' : ''}
           `}
         >
           {i}
@@ -274,23 +272,23 @@ export default function App() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+      <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
           <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Settings className="text-blue-600" /> Gestão de Militares</h2>
-            <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-200 rounded-full"><X size={20} /></button>
+            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800"><Settings className="text-blue-600" /> Gestão de Militares</h2>
+            <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500"><X size={20} /></button>
           </div>
           <div className="p-6 space-y-4 overflow-y-auto flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <input placeholder="Nome (Ex: Sd PM Silva)" className="p-2 border rounded-lg" value={newMilitar.nome} onChange={e => setNewMilitar({...newMilitar, nome: e.target.value})} />
-              <input placeholder="ID (Matrícula)" className="p-2 border rounded-lg" value={newMilitar.idMilitar} onChange={e => setNewMilitar({...newMilitar, idMilitar: e.target.value})} />
-              <button onClick={addMilitar} className="bg-blue-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700"><Plus size={18} /> Adicionar</button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+              <input placeholder="Nome (Ex: Sd PM Silva)" className="p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" value={newMilitar.nome} onChange={e => setNewMilitar({...newMilitar, nome: e.target.value})} />
+              <input placeholder="ID (Matrícula)" className="p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" value={newMilitar.idMilitar} onChange={e => setNewMilitar({...newMilitar, idMilitar: e.target.value})} />
+              <button onClick={addMilitar} className="bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors py-2 sm:py-0"><Plus size={18} /> Adicionar</button>
             </div>
             <div className="space-y-2">
               {militares.map(m => (
-                <div key={m.idDoc} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                  <div><p className="font-semibold text-gray-800">{m.nome}</p><p className="text-xs text-gray-500">ID: {m.idMilitar}</p></div>
-                  <button onClick={() => deleteMilitar(m.idDoc)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                <div key={m.idDoc} className="flex items-center justify-between p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
+                  <div><p className="font-bold text-gray-800">{m.nome}</p><p className="text-xs text-gray-500 font-medium">ID: {m.idMilitar}</p></div>
+                  <button onClick={() => deleteMilitar(m.idDoc)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={18} /></button>
                 </div>
               ))}
             </div>
@@ -301,25 +299,25 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#483D8B] p-4 md:p-8 font-sans text-gray-900">
+    <div className="min-h-screen bg-[#483D8B] p-4 md:p-8 font-sans text-gray-900 overflow-x-hidden">
       {alert && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
-            <h3 className="text-xl font-bold mb-2">{alert.title}</h3>
-            <p className="text-gray-600 mb-6">{alert.message}</p>
-            <button onClick={() => setAlert(null)} className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">OK</button>
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+            <h3 className="text-2xl font-bold mb-3 text-gray-800">{alert.title}</h3>
+            <p className="text-gray-600 mb-8 leading-relaxed">{alert.message}</p>
+            <button onClick={() => setAlert(null)} className="w-full bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors">Entendido</button>
           </div>
         </div>
       )}
 
       {showAdminLogin && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Lock size={20}/> Acesso Administrativo</h3>
-            <input type="password" placeholder="Senha de Admin" className="w-full p-3 border rounded-xl mb-4" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
-            <div className="flex gap-2">
-              <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-              <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setAlert({ title: "Erro", message: "Senha incorreta." }); } }} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Entrar</button>
+        <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800"><Lock size={20}/> Acesso Restrito</h3>
+            <input type="password" placeholder="Senha de Admin" className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+            <div className="flex gap-3">
+              <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-3 border rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setAlert({ title: "Erro de Acesso", message: "A senha inserida está incorreta." }); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors">Entrar</button>
             </div>
           </div>
         </div>
@@ -327,93 +325,108 @@ export default function App() {
 
       {isAdminMode && <AdminPanel />}
 
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <header className="p-8 text-center border-b bg-gray-50 relative">
-          <button onClick={() => setShowAdminLogin(true)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-blue-600"><Settings size={20} /></button>
-          <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" className="h-20 mx-auto mb-4" alt="Brasão" />
-          <h1 className="text-xl font-extrabold tracking-tight text-gray-800">ESTADO DO MARANHÃO</h1>
-          <p className="text-sm text-gray-500 font-medium">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-          <p className="text-sm text-gray-500 mb-6">10º BATALHÃO DA POLÍCIA MILITAR - 2ª CIA</p>
-          <div className="flex flex-col items-center gap-4">
-             <h2 className="text-3xl font-black text-gray-900">Permuta de Serviço</h2>
-             <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-3 border-2 border-gray-200 rounded-xl text-center font-bold text-lg focus:border-blue-500 outline-none transition-all">
+      <div className="max-w-5xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-white/20">
+        <header className="p-8 text-center border-b bg-gray-50/50 relative">
+          <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"><Settings size={22} /></button>
+          <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" className="h-20 mx-auto mb-6 drop-shadow-md" alt="Brasão" />
+          <h1 className="text-xl font-bold tracking-tight text-gray-800">ESTADO DO MARANHÃO</h1>
+          <p className="text-sm text-gray-500 font-semibold mt-1">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+          <p className="text-sm text-gray-500 mb-8 font-medium">10º BATALHÃO DA POLÍCIA MILITAR - 2ª CIA</p>
+          <div className="flex flex-col items-center gap-5">
+             <h2 className="text-3xl font-black text-gray-900 tracking-tight">Permuta de Serviço</h2>
+             <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-3.5 border-2 border-gray-200 rounded-2xl text-center font-bold text-lg focus:border-blue-500 outline-none transition-all cursor-pointer bg-white">
                 <option>TURIAÇU</option><option>SEDE</option><option>TURILÂNDIA</option>
              </select>
           </div>
         </header>
 
-        <main className="p-6 md:p-10 space-y-10">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-blue-800 text-sm uppercase mb-4">1. PM Substituído</h3>
+        <main className="p-6 md:p-12 space-y-12">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gray-50 p-7 rounded-3xl border border-gray-100 shadow-sm">
+              <h3 className="font-bold text-blue-800 text-xs uppercase tracking-widest mb-5">1. PM Substituído</h3>
               <div className="space-y-4">
-                <select className="w-full p-3 bg-white border rounded-xl" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({ nome: e.target.value, id: m ? m.idMilitar : "" }); }}>
-                  <option value="">Selecione...</option>
+                <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-medium outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({ nome: e.target.value, id: m ? m.idMilitar : "" }); }}>
+                  <option value="">Selecione um militar...</option>
                   {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                 </select>
-                <input className="w-full p-3 bg-gray-100 border rounded-xl" placeholder="ID" readOnly value={pmSubstituido.id} />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">ID:</span>
+                  <input className="w-full p-4 pl-10 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 shadow-inner" readOnly value={pmSubstituido.id} placeholder="---" />
+                </div>
               </div>
             </div>
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-blue-800 text-sm uppercase mb-4">2. PM Substituto</h3>
+            <div className="bg-gray-50 p-7 rounded-3xl border border-gray-100 shadow-sm">
+              <h3 className="font-bold text-blue-800 text-xs uppercase tracking-widest mb-5">2. PM Substituto</h3>
               <div className="space-y-4">
-                <select className="w-full p-3 bg-white border rounded-xl" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({ nome: e.target.value, id: m ? m.idMilitar : "" }); }}>
-                  <option value="">Selecione...</option>
+                <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-medium outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({ nome: e.target.value, id: m ? m.idMilitar : "" }); }}>
+                  <option value="">Selecione um militar...</option>
                   {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                 </select>
-                <input className="w-full p-3 bg-gray-100 border rounded-xl" placeholder="ID" readOnly value={pmSubstituto.id} />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">ID:</span>
+                  <input className="w-full p-4 pl-10 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 shadow-inner" readOnly value={pmSubstituto.id} placeholder="---" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            <h3 className="font-bold text-blue-800 text-sm uppercase mb-6">3. Datas da Permuta</h3>
-            <div className="grid lg:grid-cols-2 gap-10">
-              <div>
-                <label className="font-bold text-gray-700 block mb-2">Data do Serviço Permutado</label>
-                <div className="bg-white p-4 rounded-2xl border shadow-sm">
-                  <div className="flex justify-between items-center mb-4">
-                    <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><ChevronLeft/></button>
-                    <span className="font-bold">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                    <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><ChevronRight/></button>
+          <div className="bg-gray-50 p-7 rounded-3xl border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-blue-800 text-xs uppercase tracking-widest mb-8">3. Datas da Permuta</h3>
+            <div className="grid lg:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <label className="font-bold text-gray-700 text-sm flex items-center gap-2 ml-1">Data do Serviço Permutado</label>
+                <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-5">
+                    <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft size={20}/></button>
+                    <span className="font-bold text-gray-800">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                    <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronRight size={20}/></button>
                   </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-2">
-                    {['D','S','T','Q','Q','S','S'].map((d, i) => <div key={`head-service-${i}`}>{d}</div>)}
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 mb-3 uppercase tracking-tighter">
+                    {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d, i) => <div key={`head-service-${i}`}>{d}</div>)}
                   </div>
                   <div className="grid grid-cols-7 gap-1">{renderDays(serviceDates, setServiceDates)}</div>
                 </div>
               </div>
-              <div>
-                <div className="flex justify-between items-center mb-2"><label className="font-bold text-gray-700">Data do Pagamento</label><label className="flex items-center gap-2 text-xs font-semibold cursor-pointer"><input type="checkbox" checked={noPagamento} onChange={e => setNoPagamento(e.target.checked)} />Não há pagamento</label></div>
-                {!noPagamento && (
-                  <div className="bg-white p-4 rounded-2xl border shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                      <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><ChevronLeft/></button>
-                      <span className="font-bold">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                      <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><ChevronRight/></button>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="font-bold text-gray-700 text-sm">Data do Pagamento</label>
+                  <label className="flex items-center gap-2 text-xs font-bold cursor-pointer text-gray-500 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
+                    <input type="checkbox" checked={noPagamento} onChange={e => setNoPagamento(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4" />
+                    Sem pagamento
+                  </label>
+                </div>
+                {!noPagamento ? (
+                  <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center mb-5">
+                      <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft size={20}/></button>
+                      <span className="font-bold text-gray-800">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                      <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronRight size={20}/></button>
                     </div>
-                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-2">
-                      {['D','S','T','Q','Q','S','S'].map((d, i) => <div key={`head-payment-${i}`}>{d}</div>)}
+                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 mb-3 uppercase tracking-tighter">
+                      {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d, i) => <div key={`head-payment-${i}`}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-1">{renderDays(paymentDates, setPaymentDates)}</div>
                   </div>
+                ) : (
+                  <div className="h-[250px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-3xl text-gray-400 text-sm font-medium italic">Intervalo de pagamento desativado</div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-             <h3 className="font-bold text-blue-800 text-sm uppercase mb-4">4. Comandante</h3>
-             <input className="w-full p-3 bg-white border rounded-xl" value={comandante} onChange={e => setComandante(e.target.value)} />
+          <div className="bg-gray-50 p-7 rounded-3xl border border-gray-100 shadow-sm">
+             <h3 className="font-bold text-blue-800 text-xs uppercase tracking-widest mb-5">4. Comandante Autorizador</h3>
+             <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={comandante} onChange={e => setComandante(e.target.value)} />
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 pt-6 border-t">
-            <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-700 text-white px-8 py-4 rounded-2xl font-black shadow-lg transform hover:scale-105 transition-all"><CheckCircle size={22} /> CONCLUIR E IMPRIMIR</button>
-            <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-8 py-4 rounded-2xl font-bold"><PenSquare size={20} /> ASSINAR NO GOV.BR</button>
-            <a href="https://projetobo.github.io/portal-2CIA/home.html" className="flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-500 px-8 py-4 rounded-2xl font-bold"><Home size={20} /> VOLTAR</a>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-5 pt-10 border-t border-gray-100">
+            <button onClick={handlePrint} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-blue-700 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-xl shadow-blue-900/20 hover:bg-blue-800 hover:shadow-blue-900/30 transform hover:-translate-y-1 transition-all active:scale-95"><CheckCircle size={22} /> CONCLUIR E IMPRIMIR</button>
+            <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[1.5rem] font-bold hover:bg-gray-200 transition-all"><PenSquare size={20} /> ASSINAR NO GOV.BR</button>
+            <a href="https://projetobo.github.io/portal-2CIA/home.html" className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-500 px-10 py-5 rounded-[1.5rem] font-bold hover:bg-gray-50 transition-all"><Home size={20} /> INÍCIO</a>
           </div>
         </main>
       </div>
+      <footer className="text-center mt-10 text-white/40 text-xs font-bold uppercase tracking-widest pb-10">Portal 2ª CIA - 10º BPM</footer>
     </div>
   );
 }
