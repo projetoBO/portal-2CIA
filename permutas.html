@@ -32,7 +32,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK via Módulo -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -55,6 +55,7 @@
                 trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
                 x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
                 lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                cloudOff: <><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"/><line x1="1" y1="1" x2="23" y2="23"/></>,
                 chevronLeft: <polyline points="15 18 9 12 15 6"/>,
                 chevronRight: <polyline points="9 18 15 12 9 6"/>
             };
@@ -65,11 +66,20 @@
             );
         };
 
-        // --- PROTEÇÃO CONTRA VARIÁVEIS INEXISTENTES FORA DO CANVAS ---
-        const getFirebaseConfig = () => {
-            try {
-                return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            } catch (e) { return null; }
+        const myCustomFirebaseConfig = {
+            apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
+            authDomain: "portaldepermutas.firebaseapp.com",
+            projectId: "portaldepermutas",
+            storageBucket: "portaldepermutas.firebasestorage.app",
+            messagingSenderId: "496739921207",
+            appId: "1:496739921207:web:04ceef2d6a4d8679937eb2",
+            measurementId: "G-JBKLB3DDG1"
+        };
+
+        const getActiveConfig = () => {
+            if (myCustomFirebaseConfig.apiKey) return myCustomFirebaseConfig;
+            if (typeof __firebase_config !== 'undefined') return JSON.parse(__firebase_config);
+            return null;
         };
 
         const ADMIN_PASSWORD = "32573515";
@@ -78,7 +88,14 @@
         function App() {
             const [db, setDb] = useState(null);
             const [user, setUser] = useState(null);
-            const [militares, setMilitares] = useState([]);
+            const [isOfflineMode, setIsOfflineMode] = useState(false);
+            const [militares, setMilitares] = useState([
+                { idDoc: "1", nome: "Cb PM 473/16 André", idMilitar: "849351" },
+                { idDoc: "2", nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
+                { idDoc: "3", nome: "Sd PM 502/22 Sales", idMilitar: "869293" },
+                { idDoc: "4", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
+                { idDoc: "5", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
+            ]);
             const [isAdminMode, setIsAdminMode] = useState(false);
             const [showAdminLogin, setShowAdminLogin] = useState(false);
             const [loginPassword, setLoginPassword] = useState("");
@@ -94,11 +111,8 @@
             const [alert, setAlert] = useState(null);
 
             useEffect(() => {
-                const config = getFirebaseConfig();
-                if (!config) {
-                    console.warn("Configuração Firebase não encontrada. O modo online está desativado.");
-                    return;
-                }
+                const config = getActiveConfig();
+                if (!config) return;
 
                 const checkFirebase = setInterval(async () => {
                     if (window.FirebaseLib) {
@@ -109,13 +123,27 @@
                             const auth = getAuth(app);
                             const firestore = getFirestore(app);
                             setDb(firestore);
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                            onAuthStateChanged(auth, setUser);
-                        } catch (err) { console.error("Erro Firebase Init:", err); }
+                            
+                            const initAuth = async () => {
+                                const isCustom = config.apiKey === myCustomFirebaseConfig.apiKey;
+                                try {
+                                    if (!isCustom && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                        await signInWithCustomToken(auth, __initial_auth_token);
+                                    } else {
+                                        await signInAnonymously(auth);
+                                    }
+                                } catch (loginErr) {
+                                    console.warn("Autenticação falhou (Offline Mode):", loginErr.code);
+                                    setIsOfflineMode(true);
+                                }
+                            };
+                            
+                            await initAuth();
+                            onAuthStateChanged(auth, (u) => {
+                                setUser(u);
+                                if(u) setIsOfflineMode(false);
+                            });
+                        } catch (err) { console.error("Erro Init:", err); setIsOfflineMode(true); }
                     }
                 }, 100);
                 return () => clearInterval(checkFirebase);
@@ -123,20 +151,18 @@
 
             useEffect(() => {
                 if (!user || !db) return;
-                const { collection, onSnapshot, addDoc } = window.FirebaseLib;
+                const { collection, onSnapshot } = window.FirebaseLib;
                 const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares');
+                
                 return onSnapshot(colRef, (snapshot) => {
                     const list = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
-                    if (list.length === 0 && !snapshot.metadata.fromCache) {
-                        const initial = [
-                            { nome: "Cb PM 473/16 André", idMilitar: "849351" },
-                            { nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
-                            { nome: "Sd PM 502/22 Sales", idMilitar: "869293" }
-                        ];
-                        initial.forEach(m => addDoc(colRef, m));
+                    if (list.length > 0) {
+                        setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
                     }
-                    setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
-                }, (err) => console.error("Firestore Listen Error:", err));
+                }, (error) => {
+                    console.warn("Leitura falhou, usando dados locais.");
+                    setIsOfflineMode(true);
+                });
             }, [user, db]);
 
             const formatarDataRange = (startDate, endDate) => {
@@ -147,21 +173,17 @@
                 let curr = new Date(start);
                 while (curr <= end) { dates.push(new Date(curr)); curr.setDate(curr.getDate() + 1); }
                 if (dates.length === 1) return `${String(dates[0].getDate()).padStart(2, '0')}/${String(dates[0].getMonth() + 1).padStart(2, '0')}/${dates[0].getFullYear()}`;
-                
                 let result = '';
                 let currentMonth = dates[0].getMonth();
                 let currentYear = dates[0].getFullYear();
                 let daysInGroup = [];
-
                 for (let i = 0; i < dates.length; i++) {
                     const d = dates[i];
                     if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
                         daysInGroup.push(String(d.getDate()).padStart(2, '0'));
                     } else {
                         result += `${daysInGroup.join(', ')}/${String(currentMonth + 1).padStart(2, '0')}, `;
-                        currentMonth = d.getMonth();
-                        currentYear = d.getFullYear();
-                        daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                        currentMonth = d.getMonth(); currentYear = d.getFullYear(); daysInGroup = [String(d.getDate()).padStart(2, '0')];
                     }
                 }
                 result += `${daysInGroup.join(' - ')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
@@ -170,70 +192,31 @@
 
             const handlePrint = () => {
                 if (!pmSubstituido.nome || !pmSubstituto.nome || !serviceDates.start) {
-                    setAlert({ title: "Campos Incompletos", message: "Por favor, selecione os militares e as datas." });
+                    setAlert({ title: "Campos Incompletos", message: "Preencha os nomes e selecione as datas no calendário." });
                     return;
                 }
-
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
                 const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
                 const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
-                const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-                const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
-                const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
-                const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
-
-                const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-                const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-                const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
-
-                const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
-
+                const diasServico = Math.ceil(diffTime / 86400000) + 1;
+                const tipo24 = diasServico === 1 ? 'X' : '&nbsp;';
+                const tipo48 = diasServico === 2 ? 'X' : '&nbsp;';
+                const tipo72 = diasServico >= 3 ? 'X' : '&nbsp;';
+                const sede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
+                const turi = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
+                const turia = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
+                
                 const win = window.open('', '_blank');
                 win.document.write(`
-                    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Formulário de Permuta - Impressão</title>
-                    <style>
-                        body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
-                        .container { width: 100%; max-width: 800px; margin: 0 auto; } .text-center { text-align: center; }
-                        .font-bold { font-weight: bold; } p { margin: 4px 0; } .header p { margin: 2px 0; }
-                        .text-sm { font-size: 11pt; } .text-xs { font-size: 9pt; } .text-base { font-size: 12pt; }
-                    </style></head><body>
-                    <div class="container">
-                        <div class="text-center" style="line-height: 1.15; margin: 0;">
-                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
-                            <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
-                            <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-                            <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
-                            <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-                            <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                            <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                            <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-                        </div>
-                        <div class="mt-4 mb-4" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-                            <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
-                        </div>
-                        <div style="margin-bottom: 0.25rem;">
-                            <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituido.nome.toUpperCase()} - ${pmSubstituido.id}</p>
-                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                        </div>
-                        <div style="margin-bottom: 0.25rem; margin-top: 1.5rem;">
-                            <p class="text-base">PM SUBSTITUTO: ${pmSubstituto.nome.toUpperCase()} - ${pmSubstituto.id}</p>
-                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                        </div>
-                        <div class="mb-2" style="margin-top: 1.5rem;">
-                            <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
-                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
-                        </div>
-                        <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
-                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
-                        </div>
-                        <div class="text-center" style="margin-top: 2rem;">
-                            <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
-                            <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
-                            <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandante.toUpperCase()}</p>
-                            <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
-                        </div>
-                    </div></body></html>
+                    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Permuta Impressão</title>
+                    <style>body{font-family:'Times New Roman',Times,serif;margin:1.5cm;line-height:1.15;font-size:12pt}.container{width:100%;max-width:800px;margin:0 auto}.text-center{text-align:center}.font-bold{font-weight:bold}p{margin:4px 0}.header p{margin:2px 0}.text-sm{font-size:11pt}.text-xs{font-size:9pt}.text-base{font-size:12pt}</style></head><body>
+                    <div class="container"><div class="text-center" style="line-height:1.15;margin:0"><img src="https://i.ibb.co/prs9KzDJ/BRAS-O.png" alt="Brasão" style="width:90px;height:110px;display:block;margin:0 auto 4px"><p class="font-bold" style="margin:0">ESTADO DO MARANHÃO</p><p class="text-sm" style="margin:0">SECRETARIA DE SEGURANÇA PÚBLICA</p><p class="text-sm" style="margin:0">CPA/I-5 – 10º BPM</p><p class="text-sm" style="margin:0">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p><p class="text-sm" style="margin:0">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p><p class="text-xs" style="margin:0">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p><p class="font-bold" style="margin-top:2rem;margin-bottom:0">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p></div>
+                    <div class="mt-4 mb-4" style="margin-top:1.5rem;margin-bottom:1.5rem"><p class="text-base">SEDE: ( ${sede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${turi} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${turia} )</p></div>
+                    <div style="margin-bottom:0.25rem"><p class="text-base">PM SUBSTITUÍDO: ${pmSubstituido.nome.toUpperCase()} - ${pmSubstituido.id}</p><p style="margin-top:4rem">Assinatura:________________________________________</p></div>
+                    <div style="margin-bottom:0.25rem;margin-top:1.5rem"><p class="text-base">PM SUBSTITUTO: ${pmSubstituto.nome.toUpperCase()} - ${pmSubstituto.id}</p><p style="margin-top:4rem">Assinatura:________________________________________</p></div>
+                    <div class="mb-2" style="margin-top:1.5rem"><p class="text-base">Data do serviço permutado: ${servicoTexto}</p>${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}</div>
+                    <div class="mb-4" style="text-align:left;margin-left:20px;margin-top:1rem"><p class="text-base">( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p></div>
+                    <div class="text-center" style="margin-top:2rem"><p class="text-base" style="margin:0">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p><p class="text-base" style="margin-top:3rem;margin-bottom:0">_____________________________________________________</p><p class="text-base" style="margin-top:0.2rem;margin-bottom:0">${comandante.toUpperCase()}</p><p class="text-sm" style="margin-top:0">COMANDANTE DA 2°CP/10°BPM</p></div></div></body></html>
                 `);
                 win.document.close();
                 win.print();
@@ -252,21 +235,12 @@
                     const isPast = d < today;
                     const isSel = (state.start && d.getTime() === state.start.getTime()) || (state.end && d.getTime() === state.end.getTime());
                     const inR = state.start && state.end && d > state.start && d < state.end;
-                    days.push(
-                        <div key={i} onClick={() => {
-                            if(isPast) return;
-                            let s = state.start, e = state.end;
-                            if(!s || (s && e)) { s = d; e = null; }
-                            else { 
-                                e = d; if(e < s) [s, e] = [e, s];
-                                if(Math.ceil(Math.abs(e-s)/86400000) > 2) { 
-                                    setAlert({title: "Limite", message: "Máximo 3 dias permitidos."}); 
-                                    s = d; e = null; 
-                                }
-                            }
-                            setState({...state, start: s, end: e});
-                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
-                    );
+                    days.push(<div key={i} onClick={() => {
+                        if(isPast) return;
+                        let s = state.start, e = state.end;
+                        if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setAlert({title: "Limite", message: "Máximo 3 dias."}); s = d; e = null; }}
+                        setState({...state, start: s, end: e});
+                    }} className={`calendar-day-btn ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>);
                 }
                 return days;
             };
@@ -286,8 +260,8 @@
                     {showAdminLogin && (
                         <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-4">
                             <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full">
-                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Icon name="lock" /> Admin</h3>
-                                <input type="password" placeholder="Senha" className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Icon name="lock" /> Administração</h3>
+                                <input type="password" placeholder="Senha Padrão" className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
                                 <div className="flex gap-3">
                                     <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-3 border rounded-2xl font-bold text-gray-400 text-sm">Voltar</button>
                                     <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setAlert({title:"Erro", message:"Senha incorreta."}); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm">Entrar</button>
@@ -300,24 +274,31 @@
                         <div className="fixed inset-0 bg-black/60 z-[160] flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                                 <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-                                    <h2 className="text-xl font-bold flex items-center gap-2"><Icon name="settings" className="text-blue-600" /> Militares</h2>
+                                    <h2 className="text-xl font-bold flex items-center gap-2">
+                                        <Icon name="settings" className="text-blue-600" /> Militares da Unidade
+                                        {isOfflineMode && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">OFFLINE</span>}
+                                    </h2>
                                     <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-100 rounded-full"><Icon name="x" /></button>
                                 </div>
                                 <div className="p-6 overflow-y-auto flex-1 space-y-4">
+                                    {isOfflineMode && <div className="p-4 bg-yellow-50 text-yellow-700 text-sm rounded-xl mb-2">⚠ O modo "Anônimo" não está ativado no Firebase. As alterações aqui não serão salvas permanentemente. Ative em: Firebase Console > Authentication > Sign-in method.</div>}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                                        <input id="nM" placeholder="Nome" className="p-3 border rounded-xl" />
-                                        <input id="iM" placeholder="ID" className="p-3 border rounded-xl" />
+                                        <input id="nM" placeholder="Nome do PM" className="p-3 border rounded-xl" />
+                                        <input id="iM" placeholder="ID/Matrícula" className="p-3 border rounded-xl" />
                                         <button onClick={() => {
                                             const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
-                                            if(n && i && db) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
-                                            else if(!db) setAlert({title:"Offline", message:"Configuração Firebase pendente."});
+                                            if(isOfflineMode) { setAlert({title:"Modo Offline", message:"Ative a Autenticação Anônima no Firebase para salvar dados."}); return; }
+                                            if(n && i && db && user) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
                                         }} className="bg-blue-600 text-white rounded-xl font-bold py-2"><Icon name="plus" className="inline mr-1"/> Add</button>
                                     </div>
                                     <div className="space-y-2">
                                         {militares.map(m => (
                                             <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                                                 <div><p className="font-bold text-gray-800">{m.nome}</p><p className="text-xs text-gray-500">ID: {m.idMilitar}</p></div>
-                                                <button onClick={() => window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'artifacts', APP_ID, 'public', 'data', 'militares', m.idDoc))} className="text-red-500 p-2 hover:bg-red-50 rounded-xl"><Icon name="trash" size={18}/></button>
+                                                <button onClick={() => {
+                                                    if(isOfflineMode || !db || !user) return;
+                                                    window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'artifacts', APP_ID, 'public', 'data', 'militares', m.idDoc));
+                                                }} className="text-red-500 p-2 hover:bg-red-50 rounded-xl"><Icon name="trash" size={18}/></button>
                                             </div>
                                         ))}
                                     </div>
@@ -332,45 +313,47 @@
                             <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" className="h-20 mx-auto mb-6" alt="Brasão" />
                             <h1 className="text-xl font-bold text-gray-800 tracking-tight">ESTADO DO MARANHÃO</h1>
                             <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">Secretaria de Segurança Pública - 10º BPM</p>
-                            <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter">Permuta de Serviço</h2>
-                            <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-4 border-2 border-gray-100 rounded-2xl text-center font-bold text-lg outline-none focus:border-blue-500 bg-white cursor-pointer">
-                                <option>TURIAÇU</option><option>SEDE</option><option>TURILÂNDIA</option>
-                            </select>
+                            <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
+                            <div className="flex justify-center">
+                                <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-4 border-2 border-gray-100 rounded-2xl text-center font-bold text-lg outline-none focus:border-blue-500 bg-white cursor-pointer shadow-sm">
+                                    <option>TURIAÇU</option><option>SEDE</option><option>TURILÂNDIA</option>
+                                </select>
+                            </div>
                         </header>
 
                         <main className="p-6 md:p-12 space-y-12">
                             <div className="grid md:grid-cols-2 gap-10">
                                 <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6">1. PM Substituído</h3>
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">1. PM SUBSTITUÍDO</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
                                         {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                                     </select>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest">ID:</span>
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
                                         <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituido.id} placeholder="---" />
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6">2. PM Substituto</h3>
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">2. PM SUBSTITUTO</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
                                         {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                                     </select>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest">ID:</span>
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
                                         <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituto.id} placeholder="---" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-8">3. Datas da Permuta</h3>
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-8 text-center">3. DATAS DA PERMUTA</h3>
                                 <div className="grid lg:grid-cols-2 gap-12">
                                     <div>
                                         <label className="font-bold text-gray-700 text-xs block mb-3 ml-2">Serviço Permutado</label>
                                         <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
-                                            <div className="flex justify-between items-center mb-6">
+                                            <div className="flex justify-between items-center mb-6 px-2">
                                                 <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
                                                 <span className="font-black text-[10px] uppercase tracking-widest">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
                                                 <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
@@ -391,7 +374,7 @@
                                         </div>
                                         {!noPagamento ? (
                                             <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
-                                                <div className="flex justify-between items-center mb-6">
+                                                <div className="flex justify-between items-center mb-6 px-2">
                                                     <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
                                                     <span className="font-black text-[10px] uppercase tracking-widest">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
                                                     <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
@@ -401,19 +384,19 @@
                                                 </div>
                                                 <div className="calendar-grid gap-1">{renderCalendar(paymentDates, setPaymentDates)}</div>
                                             </div>
-                                        ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta sem devolução imediata de serviço</div>}
+                                        ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta simples (sem devolução imediata)</div>}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4">4. Comandante Autorizador</h3>
+                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4">4. COMANDANTE AUTORIZADOR</h3>
                                 <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" value={comandante} onChange={e => setComandante(e.target.value)} />
                             </div>
 
                             <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-10 border-t border-gray-100">
                                 <button onClick={handlePrint} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-blue-700 text-white px-12 py-5 rounded-[2.2rem] font-black shadow-xl hover:bg-blue-800 hover:-translate-y-1 transition-all active:scale-95"><Icon name="check" size={24}/> CONCLUIR E IMPRIMIR</button>
-                                <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-200 transition-all"><Icon name="pen" size={20}/> GOV.BR</button>
+                                <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-200 transition-all"><Icon name="pen" size={20}/> ASSINAR GOV.BR</button>
                                 <a href="https://projetobo.github.io/portal-2CIA/home.html" className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-500 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-50 transition-all"><Icon name="home" size={20}/> INÍCIO</a>
                             </div>
                         </main>
