@@ -279,10 +279,16 @@
                             <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandante.toUpperCase()}</p>
                             <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
                         </div>
+                        <script>
+                            window.onload = function() {
+                                setTimeout(function() {
+                                    window.print();
+                                }, 800);
+                            }
+                        <\/script>
                     </div></body></html>
                 `);
                 win.document.close();
-                win.print();
             };
 
             const renderCalendar = (state, setState) => {
