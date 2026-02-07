@@ -12,7 +12,7 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #483D8B; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
         .calendar-day-btn {
             aspect-ratio: 1 / 1;
@@ -29,7 +29,7 @@
         }
     </style>
 </head>
-<body class="bg-[#483D8B]">
+<body>
     <div id="root"></div>
 
     <!-- Firebase SDK via Módulo -->
@@ -65,9 +65,15 @@
             );
         };
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // --- PROTEÇÃO CONTRA VARIÁVEIS INEXISTENTES FORA DO CANVAS ---
+        const getFirebaseConfig = () => {
+            try {
+                return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            } catch (e) { return null; }
+        };
+
         const ADMIN_PASSWORD = "32573515";
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'permuta-oficial';
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'permuta-oficial';
 
         function App() {
             const [db, setDb] = useState(null);
@@ -88,12 +94,18 @@
             const [alert, setAlert] = useState(null);
 
             useEffect(() => {
+                const config = getFirebaseConfig();
+                if (!config) {
+                    console.warn("Configuração Firebase não encontrada. O modo online está desativado.");
+                    return;
+                }
+
                 const checkFirebase = setInterval(async () => {
                     if (window.FirebaseLib) {
                         clearInterval(checkFirebase);
                         const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseLib;
                         try {
-                            const app = initializeApp(firebaseConfig);
+                            const app = initializeApp(config);
                             const auth = getAuth(app);
                             const firestore = getFirestore(app);
                             setDb(firestore);
@@ -103,7 +115,7 @@
                                 await signInAnonymously(auth);
                             }
                             onAuthStateChanged(auth, setUser);
-                        } catch (err) { console.error(err); }
+                        } catch (err) { console.error("Erro Firebase Init:", err); }
                     }
                 }, 100);
                 return () => clearInterval(checkFirebase);
@@ -112,7 +124,7 @@
             useEffect(() => {
                 if (!user || !db) return;
                 const { collection, onSnapshot, addDoc } = window.FirebaseLib;
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'militares');
+                const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares');
                 return onSnapshot(colRef, (snapshot) => {
                     const list = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
                     if (list.length === 0 && !snapshot.metadata.fromCache) {
@@ -124,7 +136,7 @@
                         initial.forEach(m => addDoc(colRef, m));
                     }
                     setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
-                });
+                }, (err) => console.error("Firestore Listen Error:", err));
             }, [user, db]);
 
             const formatarDataRange = (startDate, endDate) => {
@@ -277,15 +289,15 @@
                                 <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Icon name="lock" /> Admin</h3>
                                 <input type="password" placeholder="Senha" className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
                                 <div className="flex gap-3">
-                                    <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-3 border rounded-2xl font-bold text-gray-400">Voltar</button>
-                                    <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setAlert({title:"Erro", message:"Senha incorreta."}); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold">Entrar</button>
+                                    <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-3 border rounded-2xl font-bold text-gray-400 text-sm">Voltar</button>
+                                    <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setAlert({title:"Erro", message:"Senha incorreta."}); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm">Entrar</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {isAdminMode && (
-                        <div className="fixed inset-0 bg-black/60 z-[160] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/60 z-[160] flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                                 <div className="p-6 border-b flex justify-between items-center bg-gray-50">
                                     <h2 className="text-xl font-bold flex items-center gap-2"><Icon name="settings" className="text-blue-600" /> Militares</h2>
@@ -297,14 +309,15 @@
                                         <input id="iM" placeholder="ID" className="p-3 border rounded-xl" />
                                         <button onClick={() => {
                                             const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
-                                            if(n && i) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', appId, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
+                                            if(n && i && db) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
+                                            else if(!db) setAlert({title:"Offline", message:"Configuração Firebase pendente."});
                                         }} className="bg-blue-600 text-white rounded-xl font-bold py-2"><Icon name="plus" className="inline mr-1"/> Add</button>
                                     </div>
                                     <div className="space-y-2">
                                         {militares.map(m => (
                                             <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                                                 <div><p className="font-bold text-gray-800">{m.nome}</p><p className="text-xs text-gray-500">ID: {m.idMilitar}</p></div>
-                                                <button onClick={() => window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'artifacts', appId, 'public', 'data', 'militares', m.idDoc))} className="text-red-500 p-2 hover:bg-red-50 rounded-xl"><Icon name="trash" size={18}/></button>
+                                                <button onClick={() => window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'artifacts', APP_ID, 'public', 'data', 'militares', m.idDoc))} className="text-red-500 p-2 hover:bg-red-50 rounded-xl"><Icon name="trash" size={18}/></button>
                                             </div>
                                         ))}
                                     </div>
@@ -317,89 +330,95 @@
                         <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
                             <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
                             <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" className="h-20 mx-auto mb-6" alt="Brasão" />
-                            <h1 className="text-xl font-bold text-gray-800">ESTADO DO MARANHÃO</h1>
-                            <p className="text-xs text-gray-500 font-bold mb-8 uppercase tracking-widest">Secretaria de Segurança Pública - 10º BPM</p>
-                            <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tight">Permuta de Serviço</h2>
-                            <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-4 border-2 border-gray-100 rounded-2xl text-center font-bold text-lg outline-none focus:border-blue-500 bg-white">
+                            <h1 className="text-xl font-bold text-gray-800 tracking-tight">ESTADO DO MARANHÃO</h1>
+                            <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">Secretaria de Segurança Pública - 10º BPM</p>
+                            <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter">Permuta de Serviço</h2>
+                            <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-4 border-2 border-gray-100 rounded-2xl text-center font-bold text-lg outline-none focus:border-blue-500 bg-white cursor-pointer">
                                 <option>TURIAÇU</option><option>SEDE</option><option>TURILÂNDIA</option>
                             </select>
                         </header>
 
                         <main className="p-6 md:p-12 space-y-12">
                             <div className="grid md:grid-cols-2 gap-10">
-                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                    <h3 className="font-bold text-blue-800 text-xs uppercase mb-6 tracking-widest">1. PM Substituído</h3>
+                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6">1. PM Substituído</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
                                         {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                                     </select>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">ID:</span>
-                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituido.id} placeholder="Matrícula" />
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest">ID:</span>
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituido.id} placeholder="---" />
                                     </div>
                                 </div>
-                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                    <h3 className="font-bold text-blue-800 text-xs uppercase mb-6 tracking-widest">2. PM Substituto</h3>
+                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6">2. PM Substituto</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
                                         {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
                                     </select>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">ID:</span>
-                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituto.id} placeholder="Matrícula" />
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest">ID:</span>
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituto.id} placeholder="---" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                <h3 className="font-bold text-blue-800 text-xs uppercase mb-8 tracking-widest">3. Datas da Permuta</h3>
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-8">3. Datas da Permuta</h3>
                                 <div className="grid lg:grid-cols-2 gap-12">
                                     <div>
-                                        <label className="font-bold text-gray-700 text-sm block mb-3 ml-2">Serviço Permutado</label>
+                                        <label className="font-bold text-gray-700 text-xs block mb-3 ml-2">Serviço Permutado</label>
                                         <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
                                             <div className="flex justify-between items-center mb-6">
-                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft"/></button>
-                                                <span className="font-bold text-sm uppercase">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight"/></button>
+                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                <span className="font-black text-[10px] uppercase tracking-widest">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
                                             </div>
-                                            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 mb-3 uppercase">
-                                                {['D','S','T','Q','Q','S','S'].map((d,i) => <div key={i}>{d}</div>)}
+                                            <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
+                                                {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
                                             </div>
                                             <div className="calendar-grid gap-1">{renderCalendar(serviceDates, setServiceDates)}</div>
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="flex justify-between mb-3 px-2"><span className="font-bold text-gray-700 text-sm">Pagamento</span><label className="flex items-center gap-2 text-[10px] font-black cursor-pointer text-gray-400 uppercase tracking-tighter"><input type="checkbox" checked={noPagamento} onChange={e => setNoPagamento(e.target.checked)}/>Não há pagamento</label></div>
+                                        <div className="flex justify-between mb-3 px-2">
+                                            <span className="font-bold text-gray-700 text-xs">Pagamento</span>
+                                            <label className="flex items-center gap-2 text-[9px] font-black cursor-pointer text-gray-400 uppercase tracking-tighter">
+                                                <input type="checkbox" checked={noPagamento} onChange={e => setNoPagamento(e.target.checked)} className="rounded-sm text-blue-600 border-gray-300 focus:ring-0" />
+                                                Não há pagamento
+                                            </label>
+                                        </div>
                                         {!noPagamento ? (
                                             <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
                                                 <div className="flex justify-between items-center mb-6">
-                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft"/></button>
-                                                    <span className="font-bold text-sm uppercase">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight"/></button>
+                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                    <span className="font-black text-[10px] uppercase tracking-widest">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
                                                 </div>
-                                                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-gray-400 mb-3 uppercase">
-                                                    {['D','S','T','Q','Q','S','S'].map((d,i) => <div key={i}>{d}</div>)}
+                                                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
+                                                    {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
                                                 </div>
                                                 <div className="calendar-grid gap-1">{renderCalendar(paymentDates, setPaymentDates)}</div>
                                             </div>
-                                        ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm">Permuta sem devolução</div>}
+                                        ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta sem devolução imediata de serviço</div>}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                                <h3 className="font-bold text-blue-800 text-xs uppercase mb-6 tracking-widest">4. Autorização</h3>
-                                <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500" value={comandante} onChange={e => setComandante(e.target.value)} />
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4">4. Comandante Autorizador</h3>
+                                <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" value={comandante} onChange={e => setComandante(e.target.value)} />
                             </div>
 
-                            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-10 border-t">
-                                <button onClick={handlePrint} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-blue-700 text-white px-12 py-5 rounded-[2rem] font-black shadow-xl hover:bg-blue-800 transform hover:-translate-y-1 transition-all"><Icon name="check" size={24}/> CONCLUIR E IMPRIMIR</button>
-                                <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[2rem] font-bold hover:bg-gray-200 transition-all"><Icon name="pen" size={20}/> GOV.BR</button>
-                                <a href="https://projetobo.github.io/portal-2CIA/home.html" className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-500 px-10 py-5 rounded-[2rem] font-bold hover:bg-gray-50 transition-all"><Icon name="home" size={20}/> INÍCIO</a>
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-10 border-t border-gray-100">
+                                <button onClick={handlePrint} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-blue-700 text-white px-12 py-5 rounded-[2.2rem] font-black shadow-xl hover:bg-blue-800 hover:-translate-y-1 transition-all active:scale-95"><Icon name="check" size={24}/> CONCLUIR E IMPRIMIR</button>
+                                <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-200 transition-all"><Icon name="pen" size={20}/> GOV.BR</button>
+                                <a href="https://projetobo.github.io/portal-2CIA/home.html" className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-500 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-50 transition-all"><Icon name="home" size={20}/> INÍCIO</a>
                             </div>
                         </main>
                     </div>
-                    <footer className="text-center mt-12 text-white/40 text-[10px] font-black uppercase tracking-[0.3em] pb-10">2ª Companhia do 10º BPM - Santa Helena/MA</footer>
+                    <footer className="text-center mt-12 text-white/30 text-[10px] font-black uppercase tracking-[0.4em] pb-10">Portal 2ª Companhia / 10º Batalhão PMMA</footer>
                 </div>
             );
         }
