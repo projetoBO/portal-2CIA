@@ -55,7 +55,6 @@
                 trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
                 x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
                 lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
-                cloudOff: <><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"/><line x1="1" y1="1" x2="23" y2="23"/></>,
                 chevronLeft: <polyline points="15 18 9 12 15 6"/>,
                 chevronRight: <polyline points="9 18 15 12 9 6"/>
             };
@@ -66,6 +65,9 @@
             );
         };
 
+        // =========================================================================
+        // CONFIGURAÇÃO FIREBASE
+        // =========================================================================
         const myCustomFirebaseConfig = {
             apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
             authDomain: "portaldepermutas.firebaseapp.com",
@@ -89,6 +91,7 @@
             const [db, setDb] = useState(null);
             const [user, setUser] = useState(null);
             const [isOfflineMode, setIsOfflineMode] = useState(false);
+            const [authError, setAuthError] = useState("");
             const [militares, setMilitares] = useState([
                 { idDoc: "1", nome: "Cb PM 473/16 André", idMilitar: "849351" },
                 { idDoc: "2", nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
@@ -133,7 +136,8 @@
                                         await signInAnonymously(auth);
                                     }
                                 } catch (loginErr) {
-                                    console.warn("Autenticação falhou (Offline Mode):", loginErr.code);
+                                    console.warn("Autenticação falhou:", loginErr.code);
+                                    setAuthError(loginErr.code || loginErr.message);
                                     setIsOfflineMode(true);
                                 }
                             };
@@ -141,9 +145,16 @@
                             await initAuth();
                             onAuthStateChanged(auth, (u) => {
                                 setUser(u);
-                                if(u) setIsOfflineMode(false);
+                                if(u) {
+                                    setIsOfflineMode(false);
+                                    setAuthError("");
+                                }
                             });
-                        } catch (err) { console.error("Erro Init:", err); setIsOfflineMode(true); }
+                        } catch (err) { 
+                            console.error("Erro Geral:", err); 
+                            setAuthError("firebase/init-error");
+                            setIsOfflineMode(true); 
+                        }
                     }
                 }, 100);
                 return () => clearInterval(checkFirebase);
@@ -160,8 +171,11 @@
                         setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
                     }
                 }, (error) => {
-                    console.warn("Leitura falhou, usando dados locais.");
-                    setIsOfflineMode(true);
+                    if (error.code !== 'permission-denied') {
+                        console.warn("Leitura falhou, usando dados locais.");
+                        setAuthError(error.code || "firestore/read-failed");
+                        setIsOfflineMode(true);
+                    }
                 });
             }, [user, db]);
 
@@ -173,17 +187,21 @@
                 let curr = new Date(start);
                 while (curr <= end) { dates.push(new Date(curr)); curr.setDate(curr.getDate() + 1); }
                 if (dates.length === 1) return `${String(dates[0].getDate()).padStart(2, '0')}/${String(dates[0].getMonth() + 1).padStart(2, '0')}/${dates[0].getFullYear()}`;
+                
                 let result = '';
                 let currentMonth = dates[0].getMonth();
                 let currentYear = dates[0].getFullYear();
                 let daysInGroup = [];
+
                 for (let i = 0; i < dates.length; i++) {
                     const d = dates[i];
                     if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
                         daysInGroup.push(String(d.getDate()).padStart(2, '0'));
                     } else {
                         result += `${daysInGroup.join(', ')}/${String(currentMonth + 1).padStart(2, '0')}, `;
-                        currentMonth = d.getMonth(); currentYear = d.getFullYear(); daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                        currentMonth = d.getMonth();
+                        currentYear = d.getFullYear();
+                        daysInGroup = [String(d.getDate()).padStart(2, '0')];
                     }
                 }
                 result += `${daysInGroup.join(' - ')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
@@ -195,28 +213,67 @@
                     setAlert({ title: "Campos Incompletos", message: "Preencha os nomes e selecione as datas no calendário." });
                     return;
                 }
+
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
                 const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
                 const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
-                const diasServico = Math.ceil(diffTime / 86400000) + 1;
-                const tipo24 = diasServico === 1 ? 'X' : '&nbsp;';
-                const tipo48 = diasServico === 2 ? 'X' : '&nbsp;';
-                const tipo72 = diasServico >= 3 ? 'X' : '&nbsp;';
-                const sede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
-                const turi = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
-                const turia = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
-                
+                const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
+                const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
+                const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
+
+                const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
+                const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
+                const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+
+                const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
+
                 const win = window.open('', '_blank');
                 win.document.write(`
                     <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Permuta Impressão</title>
-                    <style>body{font-family:'Times New Roman',Times,serif;margin:1.5cm;line-height:1.15;font-size:12pt}.container{width:100%;max-width:800px;margin:0 auto}.text-center{text-align:center}.font-bold{font-weight:bold}p{margin:4px 0}.header p{margin:2px 0}.text-sm{font-size:11pt}.text-xs{font-size:9pt}.text-base{font-size:12pt}</style></head><body>
-                    <div class="container"><div class="text-center" style="line-height:1.15;margin:0"><img src="https://i.ibb.co/prs9KzDJ/BRAS-O.png" alt="Brasão" style="width:90px;height:110px;display:block;margin:0 auto 4px"><p class="font-bold" style="margin:0">ESTADO DO MARANHÃO</p><p class="text-sm" style="margin:0">SECRETARIA DE SEGURANÇA PÚBLICA</p><p class="text-sm" style="margin:0">CPA/I-5 – 10º BPM</p><p class="text-sm" style="margin:0">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p><p class="text-sm" style="margin:0">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p><p class="text-xs" style="margin:0">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p><p class="font-bold" style="margin-top:2rem;margin-bottom:0">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p></div>
-                    <div class="mt-4 mb-4" style="margin-top:1.5rem;margin-bottom:1.5rem"><p class="text-base">SEDE: ( ${sede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${turi} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${turia} )</p></div>
-                    <div style="margin-bottom:0.25rem"><p class="text-base">PM SUBSTITUÍDO: ${pmSubstituido.nome.toUpperCase()} - ${pmSubstituido.id}</p><p style="margin-top:4rem">Assinatura:________________________________________</p></div>
-                    <div style="margin-bottom:0.25rem;margin-top:1.5rem"><p class="text-base">PM SUBSTITUTO: ${pmSubstituto.nome.toUpperCase()} - ${pmSubstituto.id}</p><p style="margin-top:4rem">Assinatura:________________________________________</p></div>
-                    <div class="mb-2" style="margin-top:1.5rem"><p class="text-base">Data do serviço permutado: ${servicoTexto}</p>${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}</div>
-                    <div class="mb-4" style="text-align:left;margin-left:20px;margin-top:1rem"><p class="text-base">( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p></div>
-                    <div class="text-center" style="margin-top:2rem"><p class="text-base" style="margin:0">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p><p class="text-base" style="margin-top:3rem;margin-bottom:0">_____________________________________________________</p><p class="text-base" style="margin-top:0.2rem;margin-bottom:0">${comandante.toUpperCase()}</p><p class="text-sm" style="margin-top:0">COMANDANTE DA 2°CP/10°BPM</p></div></div></body></html>
+                    <style>
+                        body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
+                        .container { width: 100%; max-width: 800px; margin: 0 auto; } .text-center { text-align: center; }
+                        .font-bold { font-weight: bold; } p { margin: 4px 0; } .header p { margin: 2px 0; }
+                        .text-sm { font-size: 11pt; } .text-xs { font-size: 9pt; } .text-base { font-size: 12pt; }
+                    </style></head><body>
+                    <div class="container">
+                        <div class="text-center" style="line-height: 1.15; margin: 0;">
+                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                            <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+                            <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+                            <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+                            <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+                            <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+                            <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+                            <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+                        </div>
+                        <div class="mt-4 mb-4" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                            <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                        </div>
+                        <div style="margin-bottom: 0.25rem;">
+                            <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituido.nome.toUpperCase()} - ${pmSubstituido.id}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+                        <div style="margin-bottom: 0.25rem; margin-top: 1.5rem;">
+                            <p class="text-base">PM SUBSTITUTO: ${pmSubstituto.nome.toUpperCase()} - ${pmSubstituto.id}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+                        <div class="mb-2" style="margin-top: 1.5rem;">
+                            <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
+                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
+                        </div>
+                        <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
+                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                        </div>
+                        <div class="text-center" style="margin-top: 2rem;">
+                            <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
+                            <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+                            <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandante.toUpperCase()}</p>
+                            <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+                        </div>
+                    </div></body></html>
                 `);
                 win.document.close();
                 win.print();
@@ -235,14 +292,25 @@
                     const isPast = d < today;
                     const isSel = (state.start && d.getTime() === state.start.getTime()) || (state.end && d.getTime() === state.end.getTime());
                     const inR = state.start && state.end && d > state.start && d < state.end;
-                    days.push(<div key={i} onClick={() => {
-                        if(isPast) return;
-                        let s = state.start, e = state.end;
-                        if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setAlert({title: "Limite", message: "Máximo 3 dias."}); s = d; e = null; }}
-                        setState({...state, start: s, end: e});
-                    }} className={`calendar-day-btn ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>);
+                    days.push(
+                        <div key={i} onClick={() => {
+                            if(isPast) return;
+                            let s = state.start, e = state.end;
+                            if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setAlert({title: "Limite", message: "Máximo 3 dias permitidos."}); s = d; e = null; }}
+                            setState({...state, start: s, end: e});
+                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
+                    );
                 }
                 return days;
+            };
+
+            const getAuthErrorMessage = (code) => {
+                switch(code) {
+                    case 'auth/unauthorized-domain': return "Domínio não autorizado. Adicione o domínio deste site (ex: github.io) em: Firebase Console > Authentication > Settings > Authorized Domains.";
+                    case 'auth/operation-not-allowed': return "Autenticação Anônima desativada. Ative em: Firebase Console > Authentication > Sign-in method > Anonymous.";
+                    case 'auth/api-key-not-valid': return "Chave de API inválida. Verifique as credenciais no código.";
+                    default: return `Erro de conexão: ${code}. O modo Anônimo pode estar desativado ou o domínio bloqueado.`;
+                }
             };
 
             return (
@@ -281,13 +349,13 @@
                                     <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-100 rounded-full"><Icon name="x" /></button>
                                 </div>
                                 <div className="p-6 overflow-y-auto flex-1 space-y-4">
-                                    {isOfflineMode && <div className="p-4 bg-yellow-50 text-yellow-700 text-sm rounded-xl mb-2">⚠ O modo "Anônimo" não está ativado no Firebase. As alterações aqui não serão salvas permanentemente. Ative em: Firebase Console > Authentication > Sign-in method.</div>}
+                                    {isOfflineMode && <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">⚠ {getAuthErrorMessage(authError)}</div>}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                                         <input id="nM" placeholder="Nome do PM" className="p-3 border rounded-xl" />
                                         <input id="iM" placeholder="ID/Matrícula" className="p-3 border rounded-xl" />
                                         <button onClick={() => {
                                             const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
-                                            if(isOfflineMode) { setAlert({title:"Modo Offline", message:"Ative a Autenticação Anônima no Firebase para salvar dados."}); return; }
+                                            if(isOfflineMode) { setAlert({title:"Modo Offline", message:"Corrija o erro indicado no painel para salvar alterações."}); return; }
                                             if(n && i && db && user) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
                                         }} className="bg-blue-600 text-white rounded-xl font-bold py-2"><Icon name="plus" className="inline mr-1"/> Add</button>
                                     </div>
