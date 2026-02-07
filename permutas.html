@@ -32,13 +32,25 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Versão Web/Navegador) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        window.FirebaseLib = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, query };
+        // Expondo funções para o React
+        window.FirebaseLib = { 
+            initializeApp, 
+            getAuth, 
+            signInAnonymously, 
+            onAuthStateChanged, 
+            getFirestore, 
+            collection, 
+            doc, 
+            onSnapshot, 
+            addDoc, 
+            deleteDoc 
+        };
     </script>
 
     <script type="text/babel">
@@ -65,10 +77,8 @@
             );
         };
 
-        // =========================================================================
-        // CONFIGURAÇÃO FIREBASE
-        // =========================================================================
-        const myCustomFirebaseConfig = {
+        // --- CONFIGURAÇÃO DO SEU FIREBASE ---
+        const userFirebaseConfig = {
             apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
             authDomain: "portaldepermutas.firebaseapp.com",
             projectId: "portaldepermutas",
@@ -78,20 +88,15 @@
             measurementId: "G-JBKLB3DDG1"
         };
 
-        const getActiveConfig = () => {
-            if (myCustomFirebaseConfig.apiKey) return myCustomFirebaseConfig;
-            if (typeof __firebase_config !== 'undefined') return JSON.parse(__firebase_config);
-            return null;
-        };
-
         const ADMIN_PASSWORD = "32573515";
-        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'permuta-oficial';
 
         function App() {
             const [db, setDb] = useState(null);
             const [user, setUser] = useState(null);
             const [isOfflineMode, setIsOfflineMode] = useState(false);
-            const [authError, setAuthError] = useState("");
+            const [authErrorMsg, setAuthErrorMsg] = useState("");
+            
+            // Dados de backup caso o Firebase falhe
             const [militares, setMilitares] = useState([
                 { idDoc: "1", nome: "Cb PM 473/16 André", idMilitar: "849351" },
                 { idDoc: "2", nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
@@ -99,6 +104,7 @@
                 { idDoc: "4", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
                 { idDoc: "5", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
             ]);
+
             const [isAdminMode, setIsAdminMode] = useState(false);
             const [showAdminLogin, setShowAdminLogin] = useState(false);
             const [loginPassword, setLoginPassword] = useState("");
@@ -113,72 +119,80 @@
             const [paymentDates, setPaymentDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [alert, setAlert] = useState(null);
 
+            // --- INICIALIZAÇÃO DO FIREBASE ---
             useEffect(() => {
-                const config = getActiveConfig();
-                if (!config) return;
-
                 const checkFirebase = setInterval(async () => {
                     if (window.FirebaseLib) {
                         clearInterval(checkFirebase);
-                        const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseLib;
+                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
+                        
                         try {
-                            const app = initializeApp(config);
+                            const app = initializeApp(userFirebaseConfig);
                             const auth = getAuth(app);
                             const firestore = getFirestore(app);
                             setDb(firestore);
                             
-                            const initAuth = async () => {
-                                const isCustom = config.apiKey === myCustomFirebaseConfig.apiKey;
-                                try {
-                                    if (!isCustom && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                        await signInWithCustomToken(auth, __initial_auth_token);
-                                    } else {
-                                        await signInAnonymously(auth);
-                                    }
-                                } catch (loginErr) {
-                                    console.warn("Autenticação falhou:", loginErr.code);
-                                    setAuthError(loginErr.code || loginErr.message);
-                                    setIsOfflineMode(true);
-                                }
-                            };
-                            
-                            await initAuth();
-                            onAuthStateChanged(auth, (u) => {
-                                setUser(u);
-                                if(u) {
+                            // Tentativa de Login Anônimo
+                            signInAnonymously(auth)
+                                .then(() => {
                                     setIsOfflineMode(false);
-                                    setAuthError("");
-                                }
+                                    setAuthErrorMsg("");
+                                })
+                                .catch((error) => {
+                                    console.warn("Erro no Login Anônimo:", error.code);
+                                    if (error.code === 'auth/operation-not-allowed') {
+                                        setAuthErrorMsg("Login Anônimo desativado no Firebase.");
+                                    } else {
+                                        setAuthErrorMsg(`Erro de conexão: ${error.code}`);
+                                    }
+                                    setIsOfflineMode(true);
+                                });
+
+                            onAuthStateChanged(auth, (u) => {
+                                if (u) setUser(u);
                             });
+
                         } catch (err) { 
-                            console.error("Erro Geral:", err); 
-                            setAuthError("firebase/init-error");
-                            setIsOfflineMode(true); 
+                            console.error("Erro Fatal Firebase:", err); 
+                            setIsOfflineMode(true);
                         }
                     }
                 }, 100);
                 return () => clearInterval(checkFirebase);
             }, []);
 
+            // --- ESCUTA DE DADOS DO FIRESTORE ---
             useEffect(() => {
                 if (!user || !db) return;
-                const { collection, onSnapshot } = window.FirebaseLib;
-                const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares');
+                const { collection, onSnapshot, addDoc } = window.FirebaseLib;
                 
-                return onSnapshot(colRef, (snapshot) => {
-                    const list = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
-                    if (list.length > 0) {
-                        setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
-                    }
-                }, (error) => {
-                    if (error.code !== 'permission-denied') {
-                        console.warn("Leitura falhou, usando dados locais.");
-                        setAuthError(error.code || "firestore/read-failed");
-                        setIsOfflineMode(true);
-                    }
-                });
+                try {
+                    const colRef = collection(db, 'militares_lista'); // Coleção simplificada
+                    
+                    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                        const list = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
+                        
+                        if (list.length > 0) {
+                            setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
+                        } else if (!snapshot.metadata.fromCache) {
+                            // Se a lista estiver vazia (primeiro uso), adiciona um exemplo
+                            addDoc(colRef, { nome: "Sd PM Exemplo", idMilitar: "000000" });
+                        }
+                    }, (error) => {
+                        console.warn("Aviso Firestore:", error);
+                        if (error.code === 'permission-denied') {
+                            setAuthErrorMsg("Permissão Negada! Verifique as Regras do Firestore.");
+                            setIsOfflineMode(true);
+                        }
+                    });
+
+                    return () => unsubscribe();
+                } catch (e) {
+                    console.error("Erro ao configurar listener:", e);
+                }
             }, [user, db]);
 
+            // --- LÓGICA DE CALENDÁRIO E DATA ---
             const formatarDataRange = (startDate, endDate) => {
                 if (!startDate) return '';
                 const start = new Date(startDate);
@@ -304,15 +318,6 @@
                 return days;
             };
 
-            const getAuthErrorMessage = (code) => {
-                switch(code) {
-                    case 'auth/unauthorized-domain': return "Domínio não autorizado. Adicione o domínio deste site (ex: github.io) em: Firebase Console > Authentication > Settings > Authorized Domains.";
-                    case 'auth/operation-not-allowed': return "Autenticação Anônima desativada. Ative em: Firebase Console > Authentication > Sign-in method > Anonymous.";
-                    case 'auth/api-key-not-valid': return "Chave de API inválida. Verifique as credenciais no código.";
-                    default: return `Erro de conexão: ${code}. O modo Anônimo pode estar desativado ou o domínio bloqueado.`;
-                }
-            };
-
             return (
                 <div className="min-h-screen p-4 md:p-10 flex flex-col items-center">
                     {alert && (
@@ -343,20 +348,28 @@
                             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                                 <div className="p-6 border-b flex justify-between items-center bg-gray-50">
                                     <h2 className="text-xl font-bold flex items-center gap-2">
-                                        <Icon name="settings" className="text-blue-600" /> Militares da Unidade
+                                        <Icon name="settings" className="text-blue-600" /> Militares (Firebase)
                                         {isOfflineMode && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-2">OFFLINE</span>}
                                     </h2>
                                     <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-100 rounded-full"><Icon name="x" /></button>
                                 </div>
                                 <div className="p-6 overflow-y-auto flex-1 space-y-4">
-                                    {isOfflineMode && <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">⚠ {getAuthErrorMessage(authError)}</div>}
+                                    {isOfflineMode && authErrorMsg && (
+                                        <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">
+                                            <strong>Falha de Acesso:</strong> {authErrorMsg}<br/><br/>
+                                            <strong>Solução:</strong><br/>
+                                            1. Vá no Firebase Console &gt; Firestore Database &gt; Regras (Rules)<br/>
+                                            2. Troque o código por:<br/>
+                                            <code className="bg-white p-1 block mt-1 border rounded">allow read, write: if true;</code>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                                         <input id="nM" placeholder="Nome do PM" className="p-3 border rounded-xl" />
                                         <input id="iM" placeholder="ID/Matrícula" className="p-3 border rounded-xl" />
                                         <button onClick={() => {
                                             const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
-                                            if(isOfflineMode) { setAlert({title:"Modo Offline", message:"Corrija o erro indicado no painel para salvar alterações."}); return; }
-                                            if(n && i && db && user) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'artifacts', APP_ID, 'public', 'data', 'militares'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
+                                            if(!db || !user) { setAlert({title:"Erro de Conexão", message:"Não foi possível conectar ao banco de dados."}); return; }
+                                            if(n && i) { window.FirebaseLib.addDoc(window.FirebaseLib.collection(db, 'militares_lista'), {nome: n, idMilitar: i}); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
                                         }} className="bg-blue-600 text-white rounded-xl font-bold py-2"><Icon name="plus" className="inline mr-1"/> Add</button>
                                     </div>
                                     <div className="space-y-2">
@@ -364,8 +377,8 @@
                                             <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                                                 <div><p className="font-bold text-gray-800">{m.nome}</p><p className="text-xs text-gray-500">ID: {m.idMilitar}</p></div>
                                                 <button onClick={() => {
-                                                    if(isOfflineMode || !db || !user) return;
-                                                    window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'artifacts', APP_ID, 'public', 'data', 'militares', m.idDoc));
+                                                    if(!db || !user) return;
+                                                    window.FirebaseLib.deleteDoc(window.FirebaseLib.doc(db, 'militares_lista', m.idDoc));
                                                 }} className="text-red-500 p-2 hover:bg-red-50 rounded-xl"><Icon name="trash" size={18}/></button>
                                             </div>
                                         ))}
