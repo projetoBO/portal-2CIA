@@ -92,7 +92,7 @@
             { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
             { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
             { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
-        ].sort((a, b) => a.nome.localeCompare(b.nome));
+        ].sort((a, b) => a.nome.localeCompare(b.nome)).map((m, i) => ({ ...m, ordem: i })); // Adicionando ordem para o backup
 
         const ADMIN_PASSWORD = "32573515";
 
@@ -160,9 +160,17 @@
             const [comandante, setComandante] = useState("JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM");
             const [noPagamento, setNoPagamento] = useState(false);
             
+            // Estado para gerenciar QTU e Carga Horária
+            const [tipoServico, setTipoServico] = useState("24H");
+
             const [serviceDates, setServiceDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [paymentDates, setPaymentDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [formAlert, setFormAlert] = useState(null);
+
+            // --- ESTADO DE EDIÇÃO (ADMIN) ---
+            const [editingId, setEditingId] = useState(null);
+            const [editName, setEditName] = useState("");
+            const [editIdMilitar, setEditIdMilitar] = useState("");
 
             // --- INICIALIZAÇÃO DO FIREBASE ---
             useEffect(() => {
@@ -223,8 +231,15 @@
                     const unsubscribe = onSnapshot(colRef, (snapshot) => {
                         const list = snapshot.docs.map(doc => ({ ...doc.data(), idDoc: doc.id }));
                         if (list.length > 0) {
-                            setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
+                            // Ordena pela propriedade de ordem, senão pelo nome
+                            setMilitares(list.sort((a, b) => {
+                                const ordemA = typeof a.ordem === 'number' ? a.ordem : 9999;
+                                const ordemB = typeof b.ordem === 'number' ? b.ordem : 9999;
+                                if (ordemA !== ordemB) return ordemA - ordemB;
+                                return (a.nome || "").localeCompare(b.nome || "");
+                            }));
                         } else if (!snapshot.metadata.fromCache) {
+                            // Popula o banco a partir do backup atribuindo a ordem
                             LISTA_INICIAL.forEach(m => addDoc(colRef, m));
                         }
                     }, (error) => {
@@ -241,22 +256,38 @@
                 }
             }, [user, db]);
 
+            // --- ATUALIZAÇÃO AUTOMÁTICA DE TIPO DE SERVIÇO (BASED ON DATES) ---
+            useEffect(() => {
+                if (serviceDates.start && serviceDates.end) {
+                    const diffTime = Math.abs(serviceDates.end - serviceDates.start);
+                    const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    if (dias === 2) setTipoServico("48H");
+                    else if (dias >= 3) setTipoServico("72H");
+                } else if (serviceDates.start) {
+                    // Se for apenas 1 dia, mantém QTU se estiver selecionado, senão reseta para 24H
+                    if (tipoServico !== '1QTU' && tipoServico !== '2QTU') {
+                        setTipoServico("24H");
+                    }
+                }
+            }, [serviceDates.start, serviceDates.end]);
+
             // --- FUNÇÕES ADMIN ---
             const addMilitarLocal = (nome, id) => {
-                const newMilitar = { nome: nome, idMilitar: id };
+                const maxOrdem = militares.reduce((max, m) => typeof m.ordem === 'number' ? Math.max(max, m.ordem) : max, -1);
+                const newMilitar = { nome: nome, idMilitar: id, ordem: maxOrdem + 1 };
                 if (db && user && !isOfflineMode) {
                     const { collection, addDoc } = window.FirebaseLib;
                     addDoc(collection(db, 'militares_lista'), newMilitar);
                 } else {
                     const newLocal = { ...newMilitar, idDoc: Date.now().toString() };
-                    setMilitares([...militares, newLocal].sort((a, b) => a.nome.localeCompare(b.nome)));
+                    setMilitares([...militares, newLocal]);
                 }
             };
 
             const deleteMilitarLocal = async (idDoc) => {
                 if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
                 
-                // ATUALIZAÇÃO OTIMISTA: Remove da tela imediatamente
+                // ATUALIZAÇÃO OTIMISTA
                 setMilitares(current => current.filter(m => m.idDoc !== idDoc));
 
                 if (db && user && !isOfflineMode) {
@@ -265,6 +296,85 @@
                         await deleteDoc(doc(db, 'militares_lista', idDoc));
                     } catch (err) {
                         console.error("Erro ao excluir no banco:", err);
+                    }
+                }
+            };
+
+            const startEdit = (m) => {
+                setEditingId(m.idDoc);
+                setEditName(m.nome);
+                setEditIdMilitar(m.idMilitar);
+            };
+
+            const saveEdit = async () => {
+                const idToUpdate = editingId;
+                const dataToUpdate = { nome: editName, idMilitar: editIdMilitar };
+                
+                // ATUALIZAÇÃO OTIMISTA PARA EDIÇÃO
+                const optimisticList = militares.map(m => 
+                    m.idDoc === editingId ? { ...m, ...dataToUpdate } : m
+                );
+                setMilitares(optimisticList);
+                setEditingId(null);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        const docRef = doc(db, 'militares_lista', idToUpdate);
+                        await updateDoc(docRef, dataToUpdate);
+                    } catch (err) {
+                        console.error("Erro ao atualizar:", err);
+                        setFormAlert({ title: "Aviso", message: "Atualizado localmente, mas houve erro ao salvar no banco." });
+                    }
+                }
+            };
+
+            const moveUp = async (index) => {
+                if (index === 0) return;
+                const current = militares[index];
+                const prev = militares[index - 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const prevOrdem = typeof prev.ordem === 'number' ? prev.ordem : index - 1;
+
+                // Troca a ordem visualmente e no estado local
+                const newList = [...militares];
+                newList[index] = { ...prev, ordem: currentOrdem };
+                newList[index - 1] = { ...current, ordem: prevOrdem };
+                setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: prevOrdem });
+                        await updateDoc(doc(db, 'militares_lista', prev.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
+                    }
+                }
+            };
+
+            const moveDown = async (index) => {
+                if (index === militares.length - 1) return;
+                const current = militares[index];
+                const next = militares[index + 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const nextOrdem = typeof next.ordem === 'number' ? next.ordem : index + 1;
+
+                // Troca a ordem visualmente e no estado local
+                const newList = [...militares];
+                newList[index] = { ...next, ordem: currentOrdem };
+                newList[index + 1] = { ...current, ordem: nextOrdem };
+                setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: nextOrdem });
+                        await updateDoc(doc(db, 'militares_lista', next.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
                     }
                 }
             };
@@ -306,18 +416,19 @@
 
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
                 const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
-                const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
-                const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
                 const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
                 const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
                 const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
 
-                const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-                const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-                const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+                // Lógica de Impressão QTU e Horas
+                const tipo1QTU = tipoServico === '1QTU' ? 'X' : '&nbsp;';
+                const tipo2QTU = tipoServico === '2QTU' ? 'X' : '&nbsp;';
+                const tipo24 = tipoServico === '24H' ? 'X' : '&nbsp;';
+                const tipo48 = tipoServico === '48H' ? 'X' : '&nbsp;';
+                const tipo72 = tipoServico === '72H' ? 'X' : '&nbsp;';
 
-                const brasaoUrlPrint = 'https://i.ibb.co/WvgB63VR/bras-o-pm.png';
+                const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
 
                 const win = window.open('', '_blank');
                 win.document.write(`
@@ -330,7 +441,7 @@
                     </style></head><body>
                     <div class="container">
                         <div class="text-center" style="line-height: 1.15; margin: 0;">
-                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;" id="brasao-print">
                             <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
                             <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
                             <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
@@ -355,7 +466,7 @@
                             ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
                         </div>
                         <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
-                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                            <p class="text-base">( ${tipo1QTU} ) 1º QTU - ( ${tipo2QTU} ) 2º QTU - ( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p>
                         </div>
                         <div class="text-center" style="margin-top: 2rem;">
                             <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
@@ -365,9 +476,13 @@
                         </div>
                         <script>
                             window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                }, 800);
+                                var img = document.getElementById('brasao-print');
+                                if(img.complete) {
+                                    setTimeout(window.print, 200);
+                                } else {
+                                    img.onload = function() { setTimeout(window.print, 200); };
+                                    img.onerror = function() { setTimeout(window.print, 200); }; // Imprime mesmo se a imagem falhar
+                                }
                             }
                         <\/script>
                     </div></body></html>
@@ -394,7 +509,7 @@
                             let s = state.start, e = state.end;
                             if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setFormAlert({title: "Limite", message: "Máximo 3 dias permitidos."}); s = d; e = null; }}
                             setState({...state, start: s, end: e});
-                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
+                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
                     );
                 }
                 return days;
@@ -451,11 +566,32 @@
                                     <div className="space-y-2">
                                         {militares.map((m, index) => (
                                             <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                                                <div className="flex-1">
-                                                    <p className="font-bold text-gray-800 text-sm">{m.nome}</p>
-                                                    <p className="text-xs text-gray-500">ID: {m.idMilitar}</p>
+                                                {editingId === m.idDoc ? (
+                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 mr-2">
+                                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                        <input value={editIdMilitar} onChange={(e) => setEditIdMilitar(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex-1">
+                                                        <p className="font-bold text-gray-800 text-sm">{m.nome}</p>
+                                                        <p className="text-xs text-gray-500">ID: {m.idMilitar}</p>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex items-center gap-1">
+                                                    {editingId === m.idDoc ? (
+                                                        <button onClick={saveEdit} className="text-green-600 p-2 hover:bg-green-100 rounded-lg" title="Salvar"><Icon name="save" size={18}/></button>
+                                                    ) : (
+                                                        <button onClick={() => startEdit(m)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg" title="Editar"><Icon name="pen" size={16}/></button>
+                                                    )}
+                                                    
+                                                    <div className="flex flex-col">
+                                                        <button onClick={() => moveUp(index)} disabled={index === 0} className={`p-1 ${index===0 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowUp" size={12}/></button>
+                                                        <button onClick={() => moveDown(index)} disabled={index === militares.length - 1} className={`p-1 ${index===militares.length-1 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowDown" size={12}/></button>
+                                                    </div>
+
+                                                    <button onClick={() => deleteMilitarLocal(m.idDoc)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg ml-1" title="Excluir"><Icon name="trash" size={18}/></button>
                                                 </div>
-                                                <button onClick={() => deleteMilitarLocal(m.idDoc)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg ml-1" title="Excluir"><Icon name="trash" size={18}/></button>
                                             </div>
                                         ))}
                                     </div>
@@ -467,7 +603,7 @@
                     <div className="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden">
                         <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
                             <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
-                            <img src="https://i.ibb.co/WvgB63VR/bras-o-pm.png" className="h-20 mx-auto mb-6" alt="Logo" />
+                            <img src="https://i.ibb.co/rK4LvYVj/imagem-2026-04-29-112907685.png" className="h-20 mx-auto mb-6" alt="Logo" />
                             <h1 className="text-xl font-bold text-gray-800 tracking-tight">2ª COMPANHIA</h1>
                             <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">DPM DE TURIAÇU</p>
                             <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
@@ -544,6 +680,29 @@
                                         ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta simples (sem devolução imediata)</div>}
                                     </div>
                                 </div>
+                                
+                                <div className="mt-8 pt-6 border-t border-gray-100">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <label className="font-bold text-gray-700 text-xs block mb-1 ml-2">Duração do Serviço</label>
+                                            <p className="text-[10px] text-gray-400 ml-2">Selecione o turno ou a carga horária correspondente.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { id: '1QTU', label: '1º QTU (Dia)' },
+                                                { id: '2QTU', label: '2º QTU (Noite)' },
+                                                { id: '24H', label: '24 Horas' },
+                                                { id: '48H', label: '48 Horas' },
+                                                { id: '72H', label: '72 Horas' }
+                                            ].map(op => (
+                                                <label key={op.id} className={`cursor-pointer px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${tipoServico === op.id ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-500 hover:border-blue-200'}`}>
+                                                    <input type="radio" name="tipoServico" value={op.id} checked={tipoServico === op.id} onChange={e => setTipoServico(e.target.value)} className="hidden" />
+                                                    {op.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
@@ -568,4 +727,3 @@
     </script>
 </body>
 </html>
-
