@@ -415,20 +415,26 @@
                 }
 
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
-                const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+                let pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+                
+                if (!pagamentoTexto || pagamentoTexto.trim() === '') {
+                    pagamentoTexto = 'SA';
+                }
+
+                const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
+                const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
                 const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
                 const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
                 const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
 
-                // Lógica de Impressão QTU e Horas
                 const tipo1QTU = tipoServico === '1QTU' ? 'X' : '&nbsp;';
                 const tipo2QTU = tipoServico === '2QTU' ? 'X' : '&nbsp;';
                 const tipo24 = tipoServico === '24H' ? 'X' : '&nbsp;';
                 const tipo48 = tipoServico === '48H' ? 'X' : '&nbsp;';
                 const tipo72 = tipoServico === '72H' ? 'X' : '&nbsp;';
 
-                const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
+                const brasaoUrlPrint = 'https://i.ibb.co/WvgB63VR/bras-o-pm.png';
 
                 const win = window.open('', '_blank');
                 win.document.write(`
@@ -463,7 +469,7 @@
                         </div>
                         <div class="mb-2" style="margin-top: 1.5rem;">
                             <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
-                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
+                            <p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>
                         </div>
                         <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
                             <p class="text-base">( ${tipo1QTU} ) 1º QTU - ( ${tipo2QTU} ) 2º QTU - ( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p>
