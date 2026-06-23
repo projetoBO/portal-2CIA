@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Permuta de Serviço Oficial</title>
+    
+    <!-- Favicon Novo -->
+    <link rel="icon" href="https://i.ibb.co/990DrMgQ/imagem-2026-04-29-112907685-removebg-preview.png" type="image/png">
+    
     <!-- Bibliotecas Externas Estáveis -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -37,7 +41,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Módulo assíncrono para conexão com Banco de Dados) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -60,10 +64,38 @@
         };
     </script>
 
+    <!-- Script Principal da Aplicação (React via Babel) -->
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- LISTA FIXA DE MILITARES (BACKUP) ---
+        // --- SISTEMA DE PROTEÇÃO CONTRA FALHAS GRAVES (TELA AZUL) ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("Erro capturado:", error, errorInfo); }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen bg-[#483D8B] flex items-center justify-center p-4">
+                            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-xl w-full text-center">
+                                <h1 className="text-red-600 font-bold text-2xl mb-4">⚠️ Ocorreu um erro no sistema</h1>
+                                <p className="text-gray-700 mb-4">Um dado corrompido ou erro de conexão impediu o carregamento.</p>
+                                <div className="bg-gray-100 p-4 rounded-lg overflow-auto text-xs text-red-800 font-mono mb-6 text-left">
+                                    {this.state.error && this.state.error.toString()}
+                                </div>
+                                <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">Recarregar Página</button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        // --- LISTA FIXA DE MILITARES (BACKUP E FUNCIONAMENTO OFFLINE) ---
         const LISTA_INICIAL = [
             { idDoc: "1", nome: "Cb PM 562/14 Edmilson", idMilitar: "N/A" },
             { idDoc: "2", nome: "Cb PM 626/14 Coriolano", idMilitar: "N/A" },
@@ -92,26 +124,26 @@
             { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
             { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
             { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
-        ].sort((a, b) => a.nome.localeCompare(b.nome));
+        ].sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""))).map((m, i) => ({ ...m, ordem: i }));
 
         const ADMIN_PASSWORD = "32573515";
 
-        // --- COMPONENTES DE ÍCONES SVG ---
+        // --- COMPONENTES DE ÍCONES SVG (Seguros para o React Renderizar) ---
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
-                settings: <><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>,
+                settings: <g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g>,
                 check: <polyline points="20 6 9 17 4 12"/>,
-                pen: <><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></>,
-                home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
-                plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
-                trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
-                x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
-                lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                pen: <g><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></g>,
+                home: <g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></g>,
+                plus: <g><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>,
+                trash: <g><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></g>,
+                x: <g><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g>,
+                lock: <g><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></g>,
                 chevronLeft: <polyline points="15 18 9 12 15 6"/>,
                 chevronRight: <polyline points="9 18 15 12 9 6"/>,
-                arrowUp: <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>,
-                arrowDown: <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>,
-                save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>
+                arrowUp: <g><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></g>,
+                arrowDown: <g><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></g>,
+                save: <g><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></g>
             };
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -121,7 +153,7 @@
         };
 
         // =========================================================================
-        // CONFIGURAÇÃO FIREBASE
+        // CONFIGURAÇÃO FIREBASE (Chaves Inseridas)
         // =========================================================================
         const myCustomFirebaseConfig = {
             apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
@@ -139,8 +171,6 @@
             return null;
         };
 
-        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'permuta-oficial';
-
         function App() {
             // --- ESTADO LOCAL ---
             const [militares, setMilitares] = useState(LISTA_INICIAL);
@@ -157,17 +187,28 @@
             const [localizacao, setLocalizacao] = useState("TURIAÇU");
             const [pmSubstituido, setPmSubstituido] = useState({ nome: "", id: "" });
             const [pmSubstituto, setPmSubstituto] = useState({ nome: "", id: "" });
-            const [comandante, setComandante] = useState("JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM");
+            const [comandante, setComandante] = useState("JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOEM");
             const [noPagamento, setNoPagamento] = useState(false);
             
+            // Estado para gerenciar QTU e Carga Horária
+            const [tipoServico, setTipoServico] = useState("24H");
+
             const [serviceDates, setServiceDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [paymentDates, setPaymentDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [formAlert, setFormAlert] = useState(null);
 
+            // --- ESTADO DE EDIÇÃO (ADMIN) ---
+            const [editingId, setEditingId] = useState(null);
+            const [editName, setEditName] = useState("");
+            const [editIdMilitar, setEditIdMilitar] = useState("");
+
             // --- INICIALIZAÇÃO DO FIREBASE ---
             useEffect(() => {
                 const config = getActiveConfig();
-                if (!config) return;
+                if (!config) {
+                    setIsOfflineMode(true);
+                    return;
+                }
 
                 const checkFirebase = setInterval(async () => {
                     if (window.FirebaseLib) {
@@ -189,11 +230,7 @@
                                     }
                                 } catch (loginErr) {
                                     console.warn("Autenticação falhou:", loginErr.code);
-                                    if (loginErr.code === 'auth/operation-not-allowed') {
-                                        setAuthErrorMsg("Login Anônimo desativado no Firebase.");
-                                    } else {
-                                        setAuthErrorMsg(`Erro de conexão: ${loginErr.code}`);
-                                    }
+                                    setAuthErrorMsg(`Erro de conexão: ${loginErr.code}`);
                                     setIsOfflineMode(true);
                                 }
                             };
@@ -212,9 +249,9 @@
                 return () => clearInterval(checkFirebase);
             }, []);
 
-            // --- ESCUTA DE DADOS DO FIRESTORE (MODO HÍBRIDO) ---
+            // --- ESCUTA DE DADOS DO FIRESTORE (MODO HÍBRIDO E BLINDADO) ---
             useEffect(() => {
-                if (!user || !db) return;
+                if (!user || !db || isOfflineMode) return;
                 const { collection, onSnapshot, addDoc } = window.FirebaseLib;
                 
                 try {
@@ -223,14 +260,22 @@
                     const unsubscribe = onSnapshot(colRef, (snapshot) => {
                         const list = snapshot.docs.map(doc => ({ ...doc.data(), idDoc: doc.id }));
                         if (list.length > 0) {
-                            setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
+                            setMilitares(list.sort((a, b) => {
+                                const ordemA = typeof a.ordem === 'number' ? a.ordem : 9999;
+                                const ordemB = typeof b.ordem === 'number' ? b.ordem : 9999;
+                                if (ordemA !== ordemB) return ordemA - ordemB;
+                                // Garantia absoluta de que textos vazios ou corrompidos não causem erro fatal "Tela Azul"
+                                const nomeA = String(a.nome || "");
+                                const nomeB = String(b.nome || "");
+                                return nomeA.localeCompare(nomeB);
+                            }));
                         } else if (!snapshot.metadata.fromCache) {
                             LISTA_INICIAL.forEach(m => addDoc(colRef, m));
                         }
                     }, (error) => {
                         console.warn("Aviso Firestore:", error);
                         if (error.code === 'permission-denied') {
-                            setAuthErrorMsg("Permissão Negada! Verifique as Regras do Firestore.");
+                            setAuthErrorMsg("Permissão Negada no Firestore. Ajuste as Regras no Console.");
                             setIsOfflineMode(true);
                         }
                     });
@@ -239,24 +284,38 @@
                 } catch (e) {
                     console.error("Erro ao configurar listener:", e);
                 }
-            }, [user, db]);
+            }, [user, db, isOfflineMode]);
+
+            // --- ATUALIZAÇÃO AUTOMÁTICA DE TIPO DE SERVIÇO (BASED ON DATES) ---
+            useEffect(() => {
+                if (serviceDates.start && serviceDates.end) {
+                    const diffTime = Math.abs(serviceDates.end - serviceDates.start);
+                    const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    if (dias === 2) setTipoServico("48H");
+                    else if (dias >= 3) setTipoServico("72H");
+                } else if (serviceDates.start) {
+                    if (tipoServico !== '1QTU' && tipoServico !== '2QTU') {
+                        setTipoServico("24H");
+                    }
+                }
+            }, [serviceDates.start, serviceDates.end]);
 
             // --- FUNÇÕES ADMIN ---
             const addMilitarLocal = (nome, id) => {
-                const newMilitar = { nome: nome, idMilitar: id };
+                const maxOrdem = militares.reduce((max, m) => typeof m.ordem === 'number' ? Math.max(max, m.ordem) : max, -1);
+                const newMilitar = { nome: nome, idMilitar: id, ordem: maxOrdem + 1 };
                 if (db && user && !isOfflineMode) {
                     const { collection, addDoc } = window.FirebaseLib;
                     addDoc(collection(db, 'militares_lista'), newMilitar);
                 } else {
                     const newLocal = { ...newMilitar, idDoc: Date.now().toString() };
-                    setMilitares([...militares, newLocal].sort((a, b) => a.nome.localeCompare(b.nome)));
+                    setMilitares([...militares, newLocal]);
                 }
             };
 
             const deleteMilitarLocal = async (idDoc) => {
                 if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
                 
-                // ATUALIZAÇÃO OTIMISTA: Remove da tela imediatamente
                 setMilitares(current => current.filter(m => m.idDoc !== idDoc));
 
                 if (db && user && !isOfflineMode) {
@@ -267,6 +326,102 @@
                         console.error("Erro ao excluir no banco:", err);
                     }
                 }
+            };
+
+            const startEdit = (m) => {
+                setEditingId(m.idDoc);
+                setEditName(m.nome || "");
+                setEditIdMilitar(m.idMilitar || "");
+            };
+
+            const saveEdit = async () => {
+                const idToUpdate = editingId;
+                const dataToUpdate = { nome: editName, idMilitar: editIdMilitar };
+                
+                const optimisticList = militares.map(m => m.idDoc === editingId ? { ...m, ...dataToUpdate } : m);
+                setMilitares(optimisticList);
+                setEditingId(null);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        const docRef = doc(db, 'militares_lista', idToUpdate);
+                        await updateDoc(docRef, dataToUpdate);
+                    } catch (err) {
+                        console.error("Erro ao atualizar:", err);
+                        setFormAlert({ title: "Aviso", message: "Erro ao salvar edição no banco." });
+                    }
+                }
+            };
+
+            const moveUp = async (index) => {
+                if (index === 0) return;
+                const current = militares[index];
+                const prev = militares[index - 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const prevOrdem = typeof prev.ordem === 'number' ? prev.ordem : index - 1;
+
+                const newList = [...militares];
+                newList[index] = { ...prev, ordem: currentOrdem };
+                newList[index - 1] = { ...current, ordem: prevOrdem };
+                setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: prevOrdem });
+                        await updateDoc(doc(db, 'militares_lista', prev.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
+                    }
+                }
+            };
+
+            const moveDown = async (index) => {
+                if (index === militares.length - 1) return;
+                const current = militares[index];
+                const next = militares[index + 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const nextOrdem = typeof next.ordem === 'number' ? next.ordem : index + 1;
+
+                const newList = [...militares];
+                newList[index] = { ...next, ordem: currentOrdem };
+                newList[index + 1] = { ...current, ordem: nextOrdem };
+                setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: nextOrdem });
+                        await updateDoc(doc(db, 'militares_lista', next.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
+                    }
+                }
+            };
+
+            // Helpers seguros para mudar o mês do calendário sem mutação direta
+            const handlePrevMonthService = () => {
+                const newDate = new Date(serviceDates.currentMonth);
+                newDate.setMonth(newDate.getMonth() - 1);
+                setServiceDates({ ...serviceDates, currentMonth: newDate });
+            };
+            const handleNextMonthService = () => {
+                const newDate = new Date(serviceDates.currentMonth);
+                newDate.setMonth(newDate.getMonth() + 1);
+                setServiceDates({ ...serviceDates, currentMonth: newDate });
+            };
+            const handlePrevMonthPayment = () => {
+                const newDate = new Date(paymentDates.currentMonth);
+                newDate.setMonth(newDate.getMonth() - 1);
+                setPaymentDates({ ...paymentDates, currentMonth: newDate });
+            };
+            const handleNextMonthPayment = () => {
+                const newDate = new Date(paymentDates.currentMonth);
+                newDate.setMonth(newDate.getMonth() + 1);
+                setPaymentDates({ ...paymentDates, currentMonth: newDate });
             };
 
             const formatarDataRange = (startDate, endDate) => {
@@ -298,6 +453,7 @@
                 return result;
             };
 
+            // --- IMPRESSÃO ---
             const handlePrint = () => {
                 if (!pmSubstituido.nome || !pmSubstituto.nome || !serviceDates.start) {
                     setFormAlert({ title: "Campos Incompletos", message: "Preencha os nomes e selecione as datas no calendário." });
@@ -305,17 +461,21 @@
                 }
 
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
-                const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
-                const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
-                const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                let pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+                
+                if (!pagamentoTexto || pagamentoTexto.trim() === '') {
+                    pagamentoTexto = 'SA';
+                }
 
                 const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
                 const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
                 const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
 
-                const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-                const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-                const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+                const tipo1QTU = tipoServico === '1QTU' ? 'X' : '&nbsp;';
+                const tipo2QTU = tipoServico === '2QTU' ? 'X' : '&nbsp;';
+                const tipo24 = tipoServico === '24H' ? 'X' : '&nbsp;';
+                const tipo48 = tipoServico === '48H' ? 'X' : '&nbsp;';
+                const tipo72 = tipoServico === '72H' ? 'X' : '&nbsp;';
 
                 const brasaoUrlPrint = 'https://i.ibb.co/WvgB63VR/bras-o-pm.png';
 
@@ -330,7 +490,7 @@
                     </style></head><body>
                     <div class="container">
                         <div class="text-center" style="line-height: 1.15; margin: 0;">
-                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;" id="brasao-print">
                             <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
                             <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
                             <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
@@ -352,10 +512,10 @@
                         </div>
                         <div class="mb-2" style="margin-top: 1.5rem;">
                             <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
-                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
+                            <p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>
                         </div>
                         <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
-                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                            <p class="text-base">( ${tipo1QTU} ) 1º QTU - ( ${tipo2QTU} ) 2º QTU - ( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p>
                         </div>
                         <div class="text-center" style="margin-top: 2rem;">
                             <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
@@ -365,11 +525,17 @@
                         </div>
                         <script>
                             window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                }, 800);
+                                var img = document.getElementById('brasao-print');
+                                if(img && img.complete) {
+                                    setTimeout(window.print, 200);
+                                } else if(img) {
+                                    img.onload = function() { setTimeout(window.print, 200); };
+                                    img.onerror = function() { setTimeout(window.print, 200); }; 
+                                } else {
+                                    setTimeout(window.print, 200);
+                                }
                             }
-                        <\/script>
+                        </scr` + `ipt>
                     </div></body></html>
                 `);
                 win.document.close();
@@ -394,7 +560,7 @@
                             let s = state.start, e = state.end;
                             if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setFormAlert({title: "Limite", message: "Máximo 3 dias permitidos."}); s = d; e = null; }}
                             setState({...state, start: s, end: e});
-                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
+                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
                     );
                 }
                 return days;
@@ -430,14 +596,14 @@
                             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                                 <div className="p-6 border-b flex justify-between items-center bg-gray-50">
                                     <h2 className="text-xl font-bold flex items-center gap-2">
-                                        <Icon name="settings" className="text-blue-600" /> Militares (Sessão Atual)
+                                        <Icon name="settings" className="text-blue-600" /> Militares da Unidade
                                     </h2>
                                     <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-100 rounded-full"><Icon name="x" /></button>
                                 </div>
                                 <div className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
-                                    {isOfflineMode && authErrorMsg && (
+                                    {isOfflineMode && (
                                         <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">
-                                            <strong>Aviso do Sistema:</strong> {authErrorMsg} (Funcionalidade Offline)
+                                            <strong>Aviso:</strong> Funcionando de forma offline. Suas alterações serão vistas na sua tela e ficarão salvas enquanto não fechar ou recarregar a página.
                                         </div>
                                     )}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
@@ -451,11 +617,32 @@
                                     <div className="space-y-2">
                                         {militares.map((m, index) => (
                                             <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                                                <div className="flex-1">
-                                                    <p className="font-bold text-gray-800 text-sm">{m.nome}</p>
-                                                    <p className="text-xs text-gray-500">ID: {m.idMilitar}</p>
+                                                {editingId === m.idDoc ? (
+                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 mr-2">
+                                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                        <input value={editIdMilitar} onChange={(e) => setEditIdMilitar(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex-1">
+                                                        <p className="font-bold text-gray-800 text-sm">{m.nome}</p>
+                                                        <p className="text-xs text-gray-500">ID: {m.idMilitar}</p>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex items-center gap-1">
+                                                    {editingId === m.idDoc ? (
+                                                        <button onClick={saveEdit} className="text-green-600 p-2 hover:bg-green-100 rounded-lg" title="Salvar"><Icon name="save" size={18}/></button>
+                                                    ) : (
+                                                        <button onClick={() => startEdit(m)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg" title="Editar"><Icon name="pen" size={16}/></button>
+                                                    )}
+                                                    
+                                                    <div className="flex flex-col">
+                                                        <button onClick={() => moveUp(index)} disabled={index === 0} className={`p-1 ${index===0 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowUp" size={12}/></button>
+                                                        <button onClick={() => moveDown(index)} disabled={index === militares.length - 1} className={`p-1 ${index===militares.length-1 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowDown" size={12}/></button>
+                                                    </div>
+
+                                                    <button onClick={() => deleteMilitarLocal(m.idDoc)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg ml-1" title="Excluir"><Icon name="trash" size={18}/></button>
                                                 </div>
-                                                <button onClick={() => deleteMilitarLocal(m.idDoc)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg ml-1" title="Excluir"><Icon name="trash" size={18}/></button>
                                             </div>
                                         ))}
                                     </div>
@@ -467,7 +654,7 @@
                     <div className="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden">
                         <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
                             <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
-                            <img src="https://i.ibb.co/WvgB63VR/bras-o-pm.png" className="h-20 mx-auto mb-6" alt="Logo" />
+                            <img src="https://i.ibb.co/rK4LvYVj/imagem-2026-04-29-112907685.png" className="h-20 mx-auto mb-6" alt="Logo" />
                             <h1 className="text-xl font-bold text-gray-800 tracking-tight">2ª COMPANHIA</h1>
                             <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">DPM DE TURIAÇU</p>
                             <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
@@ -484,7 +671,7 @@
                                     <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">1. PM SUBSTITUÍDO</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
-                                        {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
+                                        {militares.map(m => <option key={m.idDoc} value={m.nome || "Militar sem nome"}>{m.nome || "Militar sem nome"}</option>)}
                                     </select>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
@@ -495,7 +682,7 @@
                                     <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">2. PM SUBSTITUTO</h3>
                                     <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
                                         <option value="">Selecione o militar...</option>
-                                        {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
+                                        {militares.map(m => <option key={m.idDoc} value={m.nome || "Militar sem nome"}>{m.nome || "Militar sem nome"}</option>)}
                                     </select>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
@@ -511,9 +698,9 @@
                                         <label className="font-bold text-gray-700 text-xs block mb-3 ml-2">Serviço Permutado</label>
                                         <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
                                             <div className="flex justify-between items-center mb-6 px-2">
-                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                <button onClick={handlePrevMonthService}><Icon name="chevronLeft" size={18}/></button>
                                                 <span className="font-black text-[10px] uppercase tracking-widest">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
+                                                <button onClick={handleNextMonthService}><Icon name="chevronRight" size={18}/></button>
                                             </div>
                                             <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
                                                 {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
@@ -532,9 +719,9 @@
                                         {!noPagamento ? (
                                             <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
                                                 <div className="flex justify-between items-center mb-6 px-2">
-                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                    <button onClick={handlePrevMonthPayment}><Icon name="chevronLeft" size={18}/></button>
                                                     <span className="font-black text-[10px] uppercase tracking-widest">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
-                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
+                                                    <button onClick={handleNextMonthPayment}><Icon name="chevronRight" size={18}/></button>
                                                 </div>
                                                 <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
                                                     {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
@@ -544,11 +731,46 @@
                                         ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta simples (sem devolução imediata)</div>}
                                     </div>
                                 </div>
+                                
+                                <div className="mt-8 pt-6 border-t border-gray-100">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <label className="font-bold text-gray-700 text-xs block mb-1 ml-2">Duração do Serviço</label>
+                                            <p className="text-[10px] text-gray-400 ml-2">Selecione o turno ou a carga horária correspondente.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { id: '1QTU', label: '1º QTU (Dia)' },
+                                                { id: '2QTU', label: '2º QTU (Noite)' },
+                                                { id: '24H', label: '24 Horas' },
+                                                { id: '48H', label: '48 Horas' },
+                                                { id: '72H', label: '72 Horas' }
+                                            ].map(op => (
+                                                <label key={op.id} className={`cursor-pointer px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${tipoServico === op.id ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-500 hover:border-blue-200'}`}>
+                                                    <input type="radio" name="tipoServico" value={op.id} checked={tipoServico === op.id} onChange={e => setTipoServico(e.target.value)} className="hidden" />
+                                                    {op.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4">4. COMANDANTE AUTORIZADOR</h3>
-                                <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" value={comandante} onChange={e => setComandante(e.target.value)} />
+                            <div className="bg-blue-50 p-8 rounded-[2.5rem] border border-blue-100 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Editável</div>
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4 text-center">4. COMANDANTE AUTORIZADOR</h3>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400">
+                                        <Icon name="pen" size={18}/>
+                                    </span>
+                                    <input 
+                                        className="w-full p-4 pl-12 bg-white border-2 border-blue-200 rounded-2xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all hover:border-blue-300" 
+                                        value={comandante} 
+                                        onChange={e => setComandante(e.target.value)} 
+                                        placeholder="Digite o nome e posto do Comandante"
+                                    />
+                                </div>
+                                <p className="text-center text-[10px] text-blue-500 mt-3 font-medium">Clique no campo acima para alterar o comandante que assinará a permuta.</p>
                             </div>
 
                             <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-10 border-t border-gray-100">
@@ -564,7 +786,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>
 </body>
 </html>
