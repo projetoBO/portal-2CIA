@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Permuta de Serviço Oficial</title>
-    <!-- Favicon adicionado -->
-    <link rel="icon" href="https://i.ibb.co/rK4LvYVj/imagem-2026-04-29-112907685.png" type="image/png">
     <!-- Bibliotecas Externas Estáveis -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -39,7 +37,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK - Adicionado updateDoc -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -63,13 +61,9 @@
     </script>
 
     <script type="text/babel">
-        // Removed import statements because Babel standalone in the browser 
-        // doesn't natively support ES6 module imports without data-type="module".
-        // Instead, we use the global React and window.FirebaseLib objects.
         const { useState, useEffect } = React;
 
         // --- LISTA FIXA DE MILITARES (BACKUP) ---
-        // Se o Firebase não conectar, o sistema usa esta lista.
         const LISTA_INICIAL = [
             { idDoc: "1", nome: "Cb PM 562/14 Edmilson", idMilitar: "N/A" },
             { idDoc: "2", nome: "Cb PM 626/14 Coriolano", idMilitar: "N/A" },
@@ -98,7 +92,7 @@
             { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
             { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
             { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
-        ].sort((a, b) => a.nome.localeCompare(b.nome));
+        ].sort((a, b) => a.nome.localeCompare(b.nome)).map((m, i) => ({ ...m, ordem: i })); // Adicionando ordem para o backup
 
         const ADMIN_PASSWORD = "32573515";
 
@@ -245,6 +239,7 @@
                                 return (a.nome || "").localeCompare(b.nome || "");
                             }));
                         } else if (!snapshot.metadata.fromCache) {
+                            // Popula o banco a partir do backup atribuindo a ordem
                             LISTA_INICIAL.forEach(m => addDoc(colRef, m));
                         }
                     }, (error) => {
@@ -420,7 +415,12 @@
                 }
 
                 const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
-                const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+                let pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+                
+                if (!pagamentoTexto || pagamentoTexto.trim() === '') {
+                    pagamentoTexto = 'SA';
+                }
+
                 const diffTime = serviceDates.end ? Math.abs(serviceDates.end - serviceDates.start) : 0;
                 const diasServico = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
@@ -428,7 +428,6 @@
                 const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
                 const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
 
-                // Lógica de Impressão QTU e Horas
                 const tipo1QTU = tipoServico === '1QTU' ? 'X' : '&nbsp;';
                 const tipo2QTU = tipoServico === '2QTU' ? 'X' : '&nbsp;';
                 const tipo24 = tipoServico === '24H' ? 'X' : '&nbsp;';
@@ -470,7 +469,7 @@
                         </div>
                         <div class="mb-2" style="margin-top: 1.5rem;">
                             <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
-                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
+                            <p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>
                         </div>
                         <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
                             <p class="text-base">( ${tipo1QTU} ) 1º QTU - ( ${tipo2QTU} ) 2º QTU - ( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p>
@@ -484,13 +483,11 @@
                         <script>
                             window.onload = function() {
                                 var img = document.getElementById('brasao-print');
-                                if(img && img.complete) {
+                                if(img.complete) {
                                     setTimeout(window.print, 200);
-                                } else if(img) {
+                                } else {
                                     img.onload = function() { setTimeout(window.print, 200); };
                                     img.onerror = function() { setTimeout(window.print, 200); }; // Imprime mesmo se a imagem falhar
-                                } else {
-                                    setTimeout(window.print, 200);
                                 }
                             }
                         <\/script>
