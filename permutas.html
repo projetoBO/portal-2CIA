@@ -41,7 +41,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK (Módulo assíncrono para conexão com Banco de Dados) -->
+    <!-- Firebase SDK (SEÇÃO MÓDULO - APENAS AQUI O IMPORT É PERMITIDO) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -68,7 +68,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- SISTEMA DE PROTEÇÃO CONTRA FALHAS GRAVES (TELA AZUL) ---
+        // --- SISTEMA DE PROTEÇÃO CONTRA FALHAS GRAVES ---
         class ErrorBoundary extends React.Component {
             constructor(props) {
                 super(props);
@@ -128,7 +128,7 @@
 
         const ADMIN_PASSWORD = "32573515";
 
-        // --- COMPONENTES DE ÍCONES SVG (Seguros para o React Renderizar) ---
+        // --- COMPONENTES DE ÍCONES SVG ---
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
                 settings: <g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g>,
@@ -153,7 +153,7 @@
         };
 
         // =========================================================================
-        // CONFIGURAÇÃO FIREBASE (Chaves Inseridas)
+        // CONFIGURAÇÃO FIREBASE (COM SUAS CHAVES REAIS)
         // =========================================================================
         const myCustomFirebaseConfig = {
             apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
@@ -167,7 +167,6 @@
 
         const getActiveConfig = () => {
             if (myCustomFirebaseConfig.apiKey) return myCustomFirebaseConfig;
-            if (typeof __firebase_config !== 'undefined') return JSON.parse(__firebase_config);
             return null;
         };
 
@@ -190,14 +189,12 @@
             const [comandante, setComandante] = useState("JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOEM");
             const [noPagamento, setNoPagamento] = useState(false);
             
-            // Estado para gerenciar QTU e Carga Horária
             const [tipoServico, setTipoServico] = useState("24H");
 
             const [serviceDates, setServiceDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [paymentDates, setPaymentDates] = useState({ start: null, end: null, currentMonth: new Date() });
             const [formAlert, setFormAlert] = useState(null);
 
-            // --- ESTADO DE EDIÇÃO (ADMIN) ---
             const [editingId, setEditingId] = useState(null);
             const [editName, setEditName] = useState("");
             const [editIdMilitar, setEditIdMilitar] = useState("");
@@ -213,7 +210,7 @@
                 const checkFirebase = setInterval(async () => {
                     if (window.FirebaseLib) {
                         clearInterval(checkFirebase);
-                        const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseLib;
+                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
                         try {
                             const app = initializeApp(config);
                             const auth = getAuth(app);
@@ -221,13 +218,8 @@
                             setDb(firestore);
                             
                             const initAuth = async () => {
-                                const isCustom = config.apiKey === myCustomFirebaseConfig.apiKey;
                                 try {
-                                    if (!isCustom && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                        await signInWithCustomToken(auth, __initial_auth_token);
-                                    } else {
-                                        await signInAnonymously(auth);
-                                    }
+                                    await signInAnonymously(auth);
                                 } catch (loginErr) {
                                     console.warn("Autenticação falhou:", loginErr.code);
                                     setAuthErrorMsg(`Erro de conexão: ${loginErr.code}`);
@@ -249,7 +241,7 @@
                 return () => clearInterval(checkFirebase);
             }, []);
 
-            // --- ESCUTA DE DADOS DO FIRESTORE (MODO HÍBRIDO E BLINDADO) ---
+            // --- ESCUTA DE DADOS DO FIRESTORE ---
             useEffect(() => {
                 if (!user || !db || isOfflineMode) return;
                 const { collection, onSnapshot, addDoc } = window.FirebaseLib;
@@ -264,7 +256,6 @@
                                 const ordemA = typeof a.ordem === 'number' ? a.ordem : 9999;
                                 const ordemB = typeof b.ordem === 'number' ? b.ordem : 9999;
                                 if (ordemA !== ordemB) return ordemA - ordemB;
-                                // Garantia absoluta de que textos vazios ou corrompidos não causem erro fatal "Tela Azul"
                                 const nomeA = String(a.nome || "");
                                 const nomeB = String(b.nome || "");
                                 return nomeA.localeCompare(nomeB);
@@ -275,18 +266,17 @@
                     }, (error) => {
                         console.warn("Aviso Firestore:", error);
                         if (error.code === 'permission-denied') {
-                            setAuthErrorMsg("Permissão Negada no Firestore. Ajuste as Regras no Console.");
+                            setAuthErrorMsg("Permissão Negada no Firestore.");
                             setIsOfflineMode(true);
                         }
                     });
 
                     return () => unsubscribe();
                 } catch (e) {
-                    console.error("Erro ao configurar listener:", e);
+                    console.error("Erro listener:", e);
                 }
             }, [user, db, isOfflineMode]);
 
-            // --- ATUALIZAÇÃO AUTOMÁTICA DE TIPO DE SERVIÇO (BASED ON DATES) ---
             useEffect(() => {
                 if (serviceDates.start && serviceDates.end) {
                     const diffTime = Math.abs(serviceDates.end - serviceDates.start);
@@ -315,16 +305,12 @@
 
             const deleteMilitarLocal = async (idDoc) => {
                 if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
-                
                 setMilitares(current => current.filter(m => m.idDoc !== idDoc));
-
                 if (db && user && !isOfflineMode) {
                     try {
                         const { doc, deleteDoc } = window.FirebaseLib;
                         await deleteDoc(doc(db, 'militares_lista', idDoc));
-                    } catch (err) {
-                        console.error("Erro ao excluir no banco:", err);
-                    }
+                    } catch (err) { console.error("Erro excluir:", err); }
                 }
             };
 
@@ -345,12 +331,8 @@
                 if (db && user && !isOfflineMode) {
                     try {
                         const { doc, updateDoc } = window.FirebaseLib;
-                        const docRef = doc(db, 'militares_lista', idToUpdate);
-                        await updateDoc(docRef, dataToUpdate);
-                    } catch (err) {
-                        console.error("Erro ao atualizar:", err);
-                        setFormAlert({ title: "Aviso", message: "Erro ao salvar edição no banco." });
-                    }
+                        await updateDoc(doc(db, 'militares_lista', idToUpdate), dataToUpdate);
+                    } catch (err) { console.error("Erro atualizar:", err); }
                 }
             };
 
@@ -358,10 +340,8 @@
                 if (index === 0) return;
                 const current = militares[index];
                 const prev = militares[index - 1];
-                
                 const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
                 const prevOrdem = typeof prev.ordem === 'number' ? prev.ordem : index - 1;
-
                 const newList = [...militares];
                 newList[index] = { ...prev, ordem: currentOrdem };
                 newList[index - 1] = { ...current, ordem: prevOrdem };
@@ -372,9 +352,7 @@
                         const { doc, updateDoc } = window.FirebaseLib;
                         await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: prevOrdem });
                         await updateDoc(doc(db, 'militares_lista', prev.idDoc), { ordem: currentOrdem });
-                    } catch (err) {
-                        console.error("Erro ao reordenar:", err);
-                    }
+                    } catch (err) { console.error("Erro reordenar:", err); }
                 }
             };
 
@@ -382,10 +360,8 @@
                 if (index === militares.length - 1) return;
                 const current = militares[index];
                 const next = militares[index + 1];
-                
                 const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
                 const nextOrdem = typeof next.ordem === 'number' ? next.ordem : index + 1;
-
                 const newList = [...militares];
                 newList[index] = { ...next, ordem: currentOrdem };
                 newList[index + 1] = { ...current, ordem: nextOrdem };
@@ -396,13 +372,10 @@
                         const { doc, updateDoc } = window.FirebaseLib;
                         await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: nextOrdem });
                         await updateDoc(doc(db, 'militares_lista', next.idDoc), { ordem: currentOrdem });
-                    } catch (err) {
-                        console.error("Erro ao reordenar:", err);
-                    }
+                    } catch (err) { console.error("Erro reordenar:", err); }
                 }
             };
 
-            // Helpers seguros para mudar o mês do calendário sem mutação direta
             const handlePrevMonthService = () => {
                 const newDate = new Date(serviceDates.currentMonth);
                 newDate.setMonth(newDate.getMonth() - 1);
