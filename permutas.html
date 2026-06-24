@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Permuta de Serviço Oficial</title>
     
-    <!-- Favicon Novo -->
+    <!-- Favicon -->
     <link rel="icon" href="https://i.ibb.co/990DrMgQ/imagem-2026-04-29-112907685-removebg-preview.png" type="image/png">
     
-    <!-- Bibliotecas Externas Estáveis -->
+    <!-- 1. Bibliotecas Externas (Carregadas diretamente, sem "import") -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- 2. Firebase SDKs Modo "Compat" (Essencial para não usar "import" e não dar erro no Github) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #483D8B; }
@@ -31,7 +36,6 @@
         @media print {
             .no-print { display: none !important; }
         }
-        /* Scrollbar customizada para o painel admin */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -41,52 +45,29 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK (SEÇÃO MÓDULO - APENAS AQUI O IMPORT É PERMITIDO) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-
-        window.FirebaseLib = { 
-            initializeApp, 
-            getAuth, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            onAuthStateChanged, 
-            getFirestore, 
-            collection, 
-            doc, 
-            onSnapshot, 
-            addDoc, 
-            deleteDoc, 
-            updateDoc, 
-            query 
-        };
-    </script>
-
-    <!-- Script Principal da Aplicação (React via Babel) -->
     <script type="text/babel">
+        // 3. React puxado da variável global (NUNCA USE "import" AQUI DENTRO)
         const { useState, useEffect } = React;
 
-        // --- SISTEMA DE PROTEÇÃO CONTRA FALHAS GRAVES ---
+        // --- SISTEMA DE PROTEÇÃO CONTRA TELA AZUL ---
         class ErrorBoundary extends React.Component {
             constructor(props) {
                 super(props);
                 this.state = { hasError: false, error: null };
             }
             static getDerivedStateFromError(error) { return { hasError: true, error }; }
-            componentDidCatch(error, errorInfo) { console.error("Erro capturado:", error, errorInfo); }
+            componentDidCatch(error, errorInfo) { console.error("Erro capturado pelo sistema:", error, errorInfo); }
             render() {
                 if (this.state.hasError) {
                     return (
                         <div className="min-h-screen bg-[#483D8B] flex items-center justify-center p-4">
-                            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-xl w-full text-center">
-                                <h1 className="text-red-600 font-bold text-2xl mb-4">⚠️ Ocorreu um erro no sistema</h1>
-                                <p className="text-gray-700 mb-4">Um dado corrompido ou erro de conexão impediu o carregamento.</p>
+                            <div className="bg-white p-8 rounded-3xl shadow-xl max-w-xl w-full text-center">
+                                <h1 className="text-red-600 font-bold text-2xl mb-4">⚠️ Erro de Carregamento</h1>
+                                <p className="text-gray-700 mb-4">Houve uma falha interna. Mas não se preocupe, o site não travou por completo.</p>
                                 <div className="bg-gray-100 p-4 rounded-lg overflow-auto text-xs text-red-800 font-mono mb-6 text-left">
                                     {this.state.error && this.state.error.toString()}
                                 </div>
-                                <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">Recarregar Página</button>
+                                <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Recarregar Página</button>
                             </div>
                         </div>
                     );
@@ -95,35 +76,35 @@
             }
         }
 
-        // --- LISTA FIXA DE MILITARES (BACKUP E FUNCIONAMENTO OFFLINE) ---
+        // --- LISTA FIXA DE MILITARES (BACKUP) ---
         const LISTA_INICIAL = [
-            { idDoc: "1", nome: "Cb PM 562/14 Edmilson", idMilitar: "N/A" },
-            { idDoc: "2", nome: "Cb PM 626/14 Coriolano", idMilitar: "N/A" },
-            { idDoc: "3", nome: "Cb PM 636/14 Massole", idMilitar: "N/A" },
-            { idDoc: "4", nome: "Cb PM 915/14 Froes", idMilitar: "N/A" },
-            { idDoc: "5", nome: "Cb PM 1042/14 Mário Neto", idMilitar: "N/A" },
-            { idDoc: "6", nome: "Cb PM 274/15 J. Froes", idMilitar: "N/A" },
-            { idDoc: "7", nome: "Cb PM 372/15 Cruz", idMilitar: "N/A" },
-            { idDoc: "8", nome: "Cb PM 196/16 Vasconcelos", idMilitar: "N/A" },
-            { idDoc: "9", nome: "Cb PM 473/16 André", idMilitar: "849351" },
-            { idDoc: "10", nome: "Sd PM 604/17 Élson", idMilitar: "N/A" },
-            { idDoc: "11", nome: "Sd PM 868/17 P. Souza", idMilitar: "N/A" },
-            { idDoc: "12", nome: "Sd PM 408/18 Ribeiro", idMilitar: "N/A" },
-            { idDoc: "13", nome: "Sd PM 424/18 Rodrigues", idMilitar: "N/A" },
-            { idDoc: "14", nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
-            { idDoc: "15", nome: "Sd PM 1034/18 Francinilson", idMilitar: "N/A" },
-            { idDoc: "16", nome: "Sd PM 1083/18 Moise", idMilitar: "N/A" },
-            { idDoc: "17", nome: "Sd PM 10/20 Garcez", idMilitar: "N/A" },
-            { idDoc: "18", nome: "Sd PM 72/20 S. Filho", idMilitar: "N/A" },
-            { idDoc: "19", nome: "Sd PM 003/21 Maycon", idMilitar: "N/A" },
-            { idDoc: "20", nome: "Sd PM 006/21 Carvalho", idMilitar: "N/A" },
-            { idDoc: "21", nome: "Sd PM 171/22 Fonteles", idMilitar: "N/A" },
-            { idDoc: "22", nome: "Sd PM 380/22 Soares", idMilitar: "N/A" },
-            { idDoc: "23", nome: "Sd PM 429/22 Castro", idMilitar: "N/A" },
-            { idDoc: "24", nome: "Sd PM 502/22 Sales", idMilitar: "869293" },
-            { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
-            { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
-            { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
+            { nome: "Cb PM 562/14 Edmilson", idMilitar: "N/A" },
+            { nome: "Cb PM 626/14 Coriolano", idMilitar: "N/A" },
+            { nome: "Cb PM 636/14 Massole", idMilitar: "N/A" },
+            { nome: "Cb PM 915/14 Froes", idMilitar: "N/A" },
+            { nome: "Cb PM 1042/14 Mário Neto", idMilitar: "N/A" },
+            { nome: "Cb PM 274/15 J. Froes", idMilitar: "N/A" },
+            { nome: "Cb PM 372/15 Cruz", idMilitar: "N/A" },
+            { nome: "Cb PM 196/16 Vasconcelos", idMilitar: "N/A" },
+            { nome: "Cb PM 473/16 André", idMilitar: "849351" },
+            { nome: "Sd PM 604/17 Élson", idMilitar: "N/A" },
+            { nome: "Sd PM 868/17 P. Souza", idMilitar: "N/A" },
+            { nome: "Sd PM 408/18 Ribeiro", idMilitar: "N/A" },
+            { nome: "Sd PM 424/18 Rodrigues", idMilitar: "N/A" },
+            { nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
+            { nome: "Sd PM 1034/18 Francinilson", idMilitar: "N/A" },
+            { nome: "Sd PM 1083/18 Moise", idMilitar: "N/A" },
+            { nome: "Sd PM 10/20 Garcez", idMilitar: "N/A" },
+            { nome: "Sd PM 72/20 S. Filho", idMilitar: "N/A" },
+            { nome: "Sd PM 003/21 Maycon", idMilitar: "N/A" },
+            { nome: "Sd PM 006/21 Carvalho", idMilitar: "N/A" },
+            { nome: "Sd PM 171/22 Fonteles", idMilitar: "N/A" },
+            { nome: "Sd PM 380/22 Soares", idMilitar: "N/A" },
+            { nome: "Sd PM 429/22 Castro", idMilitar: "N/A" },
+            { nome: "Sd PM 502/22 Sales", idMilitar: "869293" },
+            { nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
+            { nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
+            { nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
         ].sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""))).map((m, i) => ({ ...m, ordem: i }));
 
         const ADMIN_PASSWORD = "32573515";
@@ -131,7 +112,7 @@
         // --- COMPONENTES DE ÍCONES SVG ---
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
-                settings: <g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g>,
+                settings: <g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43-.25a2 2 0 0 1-1-1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g>,
                 check: <polyline points="20 6 9 17 4 12"/>,
                 pen: <g><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></g>,
                 home: <g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></g>,
@@ -152,32 +133,10 @@
             );
         };
 
-        // =========================================================================
-        // CONFIGURAÇÃO FIREBASE (COM SUAS CHAVES REAIS)
-        // =========================================================================
-        const myCustomFirebaseConfig = {
-            apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
-            authDomain: "portaldepermutas.firebaseapp.com",
-            projectId: "portaldepermutas",
-            storageBucket: "portaldepermutas.firebasestorage.app",
-            messagingSenderId: "496739921207",
-            appId: "1:496739921207:web:04ceef2d6a4d8679937eb2",
-            measurementId: "G-JBKLB3DDG1"
-        };
-
-        const getActiveConfig = () => {
-            if (myCustomFirebaseConfig.apiKey) return myCustomFirebaseConfig;
-            return null;
-        };
-
         function App() {
-            // --- ESTADO LOCAL ---
-            const [militares, setMilitares] = useState(LISTA_INICIAL);
-            
+            const [militares, setMilitares] = useState([]);
             const [db, setDb] = useState(null);
-            const [user, setUser] = useState(null);
             const [isOfflineMode, setIsOfflineMode] = useState(false);
-            const [authErrorMsg, setAuthErrorMsg] = useState("");
 
             const [isAdminMode, setIsAdminMode] = useState(false);
             const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -199,58 +158,56 @@
             const [editName, setEditName] = useState("");
             const [editIdMilitar, setEditIdMilitar] = useState("");
 
-            // --- INICIALIZAÇÃO DO FIREBASE ---
+            // --- 4. INICIALIZAÇÃO SEGURA DO FIREBASE COMPAT ---
             useEffect(() => {
-                const config = getActiveConfig();
-                if (!config) {
-                    setIsOfflineMode(true);
-                    return;
-                }
+                try {
+                    const config = {
+                        apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
+                        authDomain: "portaldepermutas.firebaseapp.com",
+                        projectId: "portaldepermutas",
+                        storageBucket: "portaldepermutas.firebasestorage.app",
+                        messagingSenderId: "496739921207",
+                        appId: "1:496739921207:web:04ceef2d6a4d8679937eb2",
+                        measurementId: "G-JBKLB3DDG1"
+                    };
 
-                const checkFirebase = setInterval(async () => {
-                    if (window.FirebaseLib) {
-                        clearInterval(checkFirebase);
-                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseLib;
-                        try {
-                            const app = initializeApp(config);
-                            const auth = getAuth(app);
-                            const firestore = getFirestore(app);
-                            setDb(firestore);
-                            
-                            const initAuth = async () => {
-                                try {
-                                    await signInAnonymously(auth);
-                                } catch (loginErr) {
-                                    console.warn("Autenticação falhou:", loginErr.code);
-                                    setAuthErrorMsg(`Erro de conexão: ${loginErr.code}`);
-                                    setIsOfflineMode(true);
-                                }
-                            };
-                            
-                            await initAuth();
-                            onAuthStateChanged(auth, (u) => {
-                                setUser(u);
-                                if(u) setIsOfflineMode(false);
-                            });
-                        } catch (err) { 
-                            console.error("Erro Init:", err); 
-                            setIsOfflineMode(true);
-                        }
+                    // Inicia o firebase globalmente
+                    if (window.firebase && !window.firebase.apps.length) {
+                        window.firebase.initializeApp(config);
                     }
-                }, 100);
-                return () => clearInterval(checkFirebase);
+                    
+                    if (window.firebase) {
+                        const firestoreDb = window.firebase.firestore();
+                        setDb(firestoreDb);
+
+                        window.firebase.auth().signInAnonymously()
+                            .then(() => {
+                                setIsOfflineMode(false);
+                            })
+                            .catch((error) => {
+                                console.error("Erro na autenticação anônima:", error);
+                                setIsOfflineMode(true);
+                            });
+                    } else {
+                        throw new Error("Firebase não foi carregado pelo navegador.");
+                    }
+                } catch (e) {
+                    console.error("Entrando em Modo Offline devido a:", e);
+                    setIsOfflineMode(true);
+                    setMilitares(LISTA_INICIAL.map((m, i) => ({ ...m, idDoc: `local-${i}` })));
+                }
             }, []);
 
             // --- ESCUTA DE DADOS DO FIRESTORE ---
             useEffect(() => {
-                if (!user || !db || isOfflineMode) return;
-                const { collection, onSnapshot, addDoc } = window.FirebaseLib;
+                if (!db || isOfflineMode) return;
                 
                 try {
-                    const colRef = collection(db, 'militares_lista');
+                    const colRef = db.collection('militares_lista');
                     
-                    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                    const unsubscribe = colRef.onSnapshot((snapshot) => {
                         const list = snapshot.docs.map(doc => ({ ...doc.data(), idDoc: doc.id }));
+                        
                         if (list.length > 0) {
                             setMilitares(list.sort((a, b) => {
                                 const ordemA = typeof a.ordem === 'number' ? a.ordem : 9999;
@@ -261,22 +218,24 @@
                                 return nomeA.localeCompare(nomeB);
                             }));
                         } else if (!snapshot.metadata.fromCache) {
-                            LISTA_INICIAL.forEach(m => addDoc(colRef, m));
+                            // Se o banco estiver vazio, salva o backup inicial nele
+                            LISTA_INICIAL.forEach(m => colRef.add(m));
                         }
                     }, (error) => {
                         console.warn("Aviso Firestore:", error);
-                        if (error.code === 'permission-denied') {
-                            setAuthErrorMsg("Permissão Negada no Firestore.");
-                            setIsOfflineMode(true);
-                        }
+                        setIsOfflineMode(true);
+                        setMilitares(LISTA_INICIAL.map((m, i) => ({ ...m, idDoc: `local-${i}` })));
                     });
 
                     return () => unsubscribe();
                 } catch (e) {
-                    console.error("Erro listener:", e);
+                    console.error("Erro no Listener do banco de dados:", e);
+                    setIsOfflineMode(true);
+                    setMilitares(LISTA_INICIAL.map((m, i) => ({ ...m, idDoc: `local-${i}` })));
                 }
-            }, [user, db, isOfflineMode]);
+            }, [db, isOfflineMode]);
 
+            // --- ATUALIZAÇÃO AUTOMÁTICA DE TIPO DE SERVIÇO ---
             useEffect(() => {
                 if (serviceDates.start && serviceDates.end) {
                     const diffTime = Math.abs(serviceDates.end - serviceDates.start);
@@ -294,22 +253,22 @@
             const addMilitarLocal = (nome, id) => {
                 const maxOrdem = militares.reduce((max, m) => typeof m.ordem === 'number' ? Math.max(max, m.ordem) : max, -1);
                 const newMilitar = { nome: nome, idMilitar: id, ordem: maxOrdem + 1 };
-                if (db && user && !isOfflineMode) {
-                    const { collection, addDoc } = window.FirebaseLib;
-                    addDoc(collection(db, 'militares_lista'), newMilitar);
+                
+                if (db && !isOfflineMode) {
+                    db.collection('militares_lista').add(newMilitar);
                 } else {
-                    const newLocal = { ...newMilitar, idDoc: Date.now().toString() };
+                    const newLocal = { ...newMilitar, idDoc: `local-${Date.now()}` };
                     setMilitares([...militares, newLocal]);
                 }
             };
 
             const deleteMilitarLocal = async (idDoc) => {
                 if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
+                
                 setMilitares(current => current.filter(m => m.idDoc !== idDoc));
-                if (db && user && !isOfflineMode) {
+                if (db && !isOfflineMode && !idDoc.startsWith('local-')) {
                     try {
-                        const { doc, deleteDoc } = window.FirebaseLib;
-                        await deleteDoc(doc(db, 'militares_lista', idDoc));
+                        await db.collection('militares_lista').doc(idDoc).delete();
                     } catch (err) { console.error("Erro excluir:", err); }
                 }
             };
@@ -328,10 +287,9 @@
                 setMilitares(optimisticList);
                 setEditingId(null);
 
-                if (db && user && !isOfflineMode) {
+                if (db && !isOfflineMode && !idToUpdate.startsWith('local-')) {
                     try {
-                        const { doc, updateDoc } = window.FirebaseLib;
-                        await updateDoc(doc(db, 'militares_lista', idToUpdate), dataToUpdate);
+                        await db.collection('militares_lista').doc(idToUpdate).update(dataToUpdate);
                     } catch (err) { console.error("Erro atualizar:", err); }
                 }
             };
@@ -342,16 +300,16 @@
                 const prev = militares[index - 1];
                 const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
                 const prevOrdem = typeof prev.ordem === 'number' ? prev.ordem : index - 1;
+                
                 const newList = [...militares];
                 newList[index] = { ...prev, ordem: currentOrdem };
                 newList[index - 1] = { ...current, ordem: prevOrdem };
                 setMilitares(newList);
 
-                if (db && user && !isOfflineMode) {
+                if (db && !isOfflineMode && !current.idDoc.startsWith('local-') && !prev.idDoc.startsWith('local-')) {
                     try {
-                        const { doc, updateDoc } = window.FirebaseLib;
-                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: prevOrdem });
-                        await updateDoc(doc(db, 'militares_lista', prev.idDoc), { ordem: currentOrdem });
+                        await db.collection('militares_lista').doc(current.idDoc).update({ ordem: prevOrdem });
+                        await db.collection('militares_lista').doc(prev.idDoc).update({ ordem: currentOrdem });
                     } catch (err) { console.error("Erro reordenar:", err); }
                 }
             };
@@ -362,16 +320,16 @@
                 const next = militares[index + 1];
                 const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
                 const nextOrdem = typeof next.ordem === 'number' ? next.ordem : index + 1;
+                
                 const newList = [...militares];
                 newList[index] = { ...next, ordem: currentOrdem };
                 newList[index + 1] = { ...current, ordem: nextOrdem };
                 setMilitares(newList);
 
-                if (db && user && !isOfflineMode) {
+                if (db && !isOfflineMode && !current.idDoc.startsWith('local-') && !next.idDoc.startsWith('local-')) {
                     try {
-                        const { doc, updateDoc } = window.FirebaseLib;
-                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: nextOrdem });
-                        await updateDoc(doc(db, 'militares_lista', next.idDoc), { ordem: currentOrdem });
+                        await db.collection('militares_lista').doc(current.idDoc).update({ ordem: nextOrdem });
+                        await db.collection('militares_lista').doc(next.idDoc).update({ ordem: currentOrdem });
                     } catch (err) { console.error("Erro reordenar:", err); }
                 }
             };
@@ -576,7 +534,7 @@
                                 <div className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
                                     {isOfflineMode && (
                                         <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">
-                                            <strong>Aviso:</strong> Funcionando de forma offline. Suas alterações serão vistas na sua tela e ficarão salvas enquanto não fechar ou recarregar a página.
+                                            <strong>Aviso:</strong> Conexão Firebase falhou. Mudanças visíveis apenas até recarregar a página.
                                         </div>
                                     )}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
@@ -585,7 +543,7 @@
                                         <button onClick={() => {
                                             const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
                                             if(n && i) { addMilitarLocal(n, i); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
-                                        }} className="bg-blue-600 text-white rounded-xl font-bold py-2 hover:bg-blue-700 transition-colors"><Icon name="plus" className="inline mr-1"/> Add</button>
+                                        }} className="bg-blue-600 text-white rounded-xl font-bold py-2 hover:bg-blue-700 transition-colors flex justify-center items-center"><Icon name="plus" className="inline mr-1"/> Add</button>
                                     </div>
                                     <div className="space-y-2">
                                         {militares.map((m, index) => (
@@ -627,7 +585,7 @@
                     <div className="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden">
                         <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
                             <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
-                            <img src="https://i.ibb.co/rK4LvYVj/imagem-2026-04-29-112907685.png" className="h-20 mx-auto mb-6" alt="Logo" />
+                            <img src="https://i.ibb.co/990DrMgQ/imagem-2026-04-29-112907685-removebg-preview.png" className="h-20 mx-auto mb-6" alt="Logo" />
                             <h1 className="text-xl font-bold text-gray-800 tracking-tight">2ª COMPANHIA</h1>
                             <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">DPM DE TURIAÇU</p>
                             <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
@@ -648,7 +606,7 @@
                                     </select>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
-                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" value={pmSubstituido.id} onChange={(e) => setPmSubstituido({...pmSubstituido, id: e.target.value})} placeholder="---" />
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituido.id} placeholder="---" />
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
@@ -659,7 +617,7 @@
                                     </select>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
-                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" value={pmSubstituto.id} onChange={(e) => setPmSubstituto({...pmSubstituto, id: e.target.value})} placeholder="---" />
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" readOnly value={pmSubstituto.id} placeholder="---" />
                                     </div>
                                 </div>
                             </div>
@@ -759,7 +717,11 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ErrorBoundary><App /></ErrorBoundary>);
+        root.render(
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 </html>
